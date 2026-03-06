@@ -1,0 +1,73 @@
+body{
+font-family:Arial;
+margin:0;
+}
+
+.page{
+width:100%;
+}
+
+.header{
+text-align:center;
+padding:20px;
+border-bottom:2px solid #eee;
+}
+
+.mainLayout{
+display:flex;
+gap:40px;
+padding:40px;
+}
+
+.calendarSection{
+flex:2;
+}
+
+.timeSection{
+flex:1;
+max-width:300px;
+}
+
+.timeButton{
+width:100%;
+padding:12px;
+margin:10px 0;
+border:none;
+border-radius:6px;
+font-size:16px;
+cursor:pointer;
+background:linear-gradient(to right,black,red,gold);
+color:white;
+}
+
+.bookingForm input,
+.bookingForm select{
+width:100%;
+padding:10px;
+margin:8px 0;
+}
+/* Make the calendar look bigger and cleaner */
+.fc .fc-toolbar-title {
+  font-size: 1.8rem; /* bigger month title */
+  font-weight: 600;
+}
+
+.fc .fc-daygrid-event {
+  font-size: 0.9rem;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+.fc .fc-daygrid-day-number {
+  font-weight: 500;
+}
+
+.fc .fc-col-header-cell-cushion {
+  font-size: 1rem; /* bigger weekday headers */
+}
+
+/* Highlight today */
+.fc .fc-day-today {
+  background-color: #e3f2fd;
+  border-radius: 6px;
+}
