@@ -71,3 +71,16 @@ margin:8px 0;
   background-color: #e3f2fd;
   border-radius: 6px;
 }
+/* Grey out past calendar dates */
+.fc-past-date {
+  background-color: #f0f0f0 !important;  /* light grey background */
+  color: #999 !important;                /* grey text */
+  pointer-events: none;                  /* prevents clicking past dates */
+}
+
+/* Optional: grey out past events */
+.fc-event.past-event {
+  background-color: #b0b0b0 !important;
+  border-color: #999 !important;
+  color: #666 !important;
+}

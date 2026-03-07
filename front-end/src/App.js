@@ -6,32 +6,37 @@ import AdminPage from "./AdminPage";
 const ADMIN_EMAIL = "jeswinjohnson54@gmail.com";
 
 function App() {
+  const storedUser = localStorage.getItem("user"); // get persisted user
+  const [currentUser, setCurrentUser] = useState(storedUser ? JSON.parse(storedUser) : null);
   const [users, setUsers] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     fetch("http://localhost:5000/users")
-      .then((res) => res.json())
-      .then((data) => setUsers(data))
-      .catch((err) => console.error(err));
+      .then(res => res.json())
+      .then(data => setUsers(data))
+      .catch(err => console.error(err));
   }, []);
 
+  const handleLogin = (user) => {
+    localStorage.setItem("user", JSON.stringify(user)); // save to localStorage
+    setCurrentUser(user);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user"); // remove user on logout
+    setCurrentUser(null);
+  };
+
   if (!currentUser) {
-    return (
-      <Login
-        users={users}
-        onLogin={(user) => setCurrentUser(user)}
-      />
-    );
+    return <Login users={users} onLogin={handleLogin} />;
   }
 
-  // Check if the logged-in user is admin
   const userEmail = typeof currentUser === "object" ? currentUser.email : currentUser;
   if (userEmail === ADMIN_EMAIL) {
-    return <AdminPage currentUser={currentUser} />;
+    return <AdminPage currentUser={currentUser} onLogout={handleLogout} />;
   }
 
-  return <BookingSystem currentUser={currentUser} />;
+  return <BookingSystem currentUser={currentUser} onLogout={handleLogout} />;
 }
 
 export default App;

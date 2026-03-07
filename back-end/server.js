@@ -26,25 +26,20 @@ const transporter = nodemailer.createTransport({
 
 // -------- USERS -------- //
 
+// Login
 app.post("/users/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password)
-      return res.status(400).json({ message: "Email and password required" });
+    if (!email || !password) return res.status(400).json({ message: "Email and password required" });
 
     const user = await User.findOne({ email });
-
-    if (!user)
-      return res.status(400).json({ message: "Invalid email or password" });
-
-    // Plain text password comparison
-    if (password !== user.password)
+    if (!user || user.password !== password)
       return res.status(400).json({ message: "Invalid email or password" });
 
     res.json({
-      username: user.username,
-      email: user.email
+      id: user._id,
+      email: user.email,
+      level: user.level
     });
 
   } catch (err) {
@@ -52,23 +47,78 @@ app.post("/users/login", async (req, res) => {
     res.status(500).json({ message: "Login error" });
   }
 });
+
+// Get all users
+app.get("/users", async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching users" });
+  }
+});
+
+// Create a new user
+app.post("/users", async (req, res) => {
+  try {
+    const { email, password, level } = req.body;
+    if (!email || !password || !level) {
+      return res.status(400).json({ message: "Email, password, and level are required" });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User with this email already exists" });
+    }
+
+    const user = new User({ email, password, level });
+    await user.save();
+
+    res.status(201).json({ message: "User created successfully", user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error creating user" });
+  }
+});
+
+// Update user
+app.put("/users/:id", async (req, res) => {
+  try {
+    const { email, password, level } = req.body;
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { email, password, level },
+      { new: true }
+    );
+    if (!updatedUser) return res.status(404).json({ message: "User not found" });
+
+    res.json({ message: "User updated successfully", user: updatedUser });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error updating user" });
+  }
+});
+
+// Delete user
+app.delete("/users/:id", async (req, res) => {
+  try {
+    const deleted = await User.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: "User not found" });
+    res.json({ message: "User deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error deleting user" });
+  }
+});
+
 // -------- BOOKINGS -------- //
 
-// Get all bookings (normalized)
+// Get all bookings
 app.get("/bookings", async (req, res) => {
   try {
     const bookings = await Booking.find();
-
-    const cleaned = bookings.map(b => ({
-      _id: b._id,
-      username: typeof b.username === "string" ? b.username : (b.email || "Unknown"),
-      email: typeof b.email === "string" ? b.email : "unknown@test.com",
-      level: b.level,
-      date: b.date,
-      time: b.time
-    }));
-
-    res.json(cleaned);
+    res.json(bookings);
   } catch (err) {
     res.status(500).json({ message: "Error fetching bookings" });
   }
@@ -78,45 +128,55 @@ app.get("/bookings", async (req, res) => {
 app.post("/bookings", async (req, res) => {
   try {
     const { username, email, level, date, time } = req.body;
-    if (!username || !email || !level || !date || !time)
-      return res.status(400).json({ message: "All fields required" });
+    if (!email || !level || !date || !time)
+      return res.status(400).json({ message: "Email, level, date, and time required" });
 
-    // Weekly limit: 3 bookings per email
-    const d = new Date(date);
-    const day = d.getDay();
-    const monday = new Date(d);
-    monday.setDate(d.getDate() - day + (day === 0 ? -6 : 1));
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-
-    const weekBookings = await Booking.find({
-      email,
-      date: { $gte: monday.toISOString().split("T")[0], $lte: sunday.toISOString().split("T")[0] }
-    });
-
-    if (weekBookings.length >= 3)
-      return res.status(400).json({ message: "You can only book 3 days per week" });
-
-    // Check slot availability
     const existingBooking = await Booking.findOne({ date, time });
     if (existingBooking)
       return res.status(400).json({ message: "Slot already booked" });
 
-    const booking = new Booking({ username, email, level, date, time });
+    const booking = new Booking({
+      username: username || email.split("@")[0],
+      email,
+      level,
+      date,
+      time
+    });
     await booking.save();
 
-    // Send email confirmation
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Booking Confirmation",
-      text: `Hi ${username},\n\nYour booking is confirmed:\nDate: ${date}\nTime: ${time}\nLevel: ${level}\n\nThank you!`
+      text: `Hi ${booking.username},\nYour booking is confirmed on ${date} at ${time}, Level: ${level}`
     });
 
-    res.status(201).json({ message: "Booking saved and email sent!" });
+    res.status(201).json(booking);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Error saving booking or sending email" });
+    res.status(500).json({ message: "Error creating booking" });
+  }
+});
+
+// Update booking
+app.put("/bookings/:id", async (req, res) => {
+  try {
+    const { username, email, level, date, time } = req.body;
+    const updated = await Booking.findByIdAndUpdate(
+      req.params.id,
+      {
+        username: username || email.split("@")[0],
+        email,
+        level,
+        date,
+        time
+      },
+      { new: true }
+    );
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error updating booking" });
   }
 });
 
@@ -131,4 +191,4 @@ app.delete("/bookings/:id", async (req, res) => {
 });
 
 // Start server
-app.listen(5000, () => console.log("Server running on port 5000"));
+app.listen(5000, () => console.log("Server running on port 5000")); 
