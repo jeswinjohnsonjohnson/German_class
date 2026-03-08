@@ -5,14 +5,16 @@ function Login({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = async () => {
+  // Handles login on button click or Enter key press
+  const handleLogin = async (e) => {
+    if (e) e.preventDefault(); // Prevent page reload
     if (!email || !password) return alert("Please enter email and password");
 
     try {
       const res = await fetch("http://localhost:5000/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
@@ -39,25 +41,28 @@ function Login({ onLogin }) {
       <Paper sx={{ p: 4, width: 300, textAlign: "center", pt: 10, position: "relative" }}>
         <Typography variant="h5" mb={2}>Login</Typography>
 
-        <TextField
-          label="Email"
-          fullWidth
-          margin="normal"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <TextField
-          label="Password"
-          fullWidth
-          type="password"
-          margin="normal"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <Button fullWidth variant="contained" sx={{ mt: 2 }} onClick={handleLogin}>
-          Login
-        </Button>
+        {/* Form handles Enter key automatically */}
+        <form onSubmit={handleLogin}>
+          <TextField
+            label="Email"
+            fullWidth
+            margin="normal"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            label="Password"
+            fullWidth
+            type="password"
+            margin="normal"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <Button type="submit" fullWidth variant="contained" sx={{ mt: 2 }}>
+            Login
+          </Button>
+        </form>
       </Paper>
 
       {/* Floating Logo */}
