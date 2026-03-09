@@ -15,7 +15,6 @@ app.use(express.json());
 
 /* ---------------- EMAIL SETUP ---------------- */
 
-const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
