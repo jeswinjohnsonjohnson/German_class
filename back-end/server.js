@@ -1,7 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const nodemailer = require("nodemailer");
+const Mailgun = require("mailgun.js");
+const formData = require("form-data");
 const User = require("./models/User");
 const Booking = require("./models/Booking");
 require("dotenv").config();
@@ -13,16 +14,13 @@ app.use(express.json());
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
-  .catch(err => console.error(err));
+  .catch((err) => console.error(err));
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.mailgun.org",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
+// Mailgun setup
+const mailgun = new Mailgun(formData);
+const mg = mailgun.client({
+  username: "api",
+  key: process.env.MAILGUN_API_KEY,
 });
 
 // -------- USERS -------- //
@@ -31,18 +29,22 @@ const transporter = nodemailer.createTransport({
 app.post("/users/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: "Email and password required" });
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" });
+    }
 
     const user = await User.findOne({ email });
-    if (!user || user.password !== password)
+
+    if (!user || user.password !== password) {
       return res.status(400).json({ message: "Invalid email or password" });
+    }
 
     res.json({
       id: user._id,
       email: user.email,
-      level: user.level
+      level: user.level,
     });
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Login error" });
@@ -64,6 +66,7 @@ app.get("/users", async (req, res) => {
 app.post("/users", async (req, res) => {
   try {
     const { email, password, level } = req.body;
+
     if (!email || !password || !level) {
       return res.status(400).json({ message: "Email, password, and level are required" });
     }
@@ -87,12 +90,16 @@ app.post("/users", async (req, res) => {
 app.put("/users/:id", async (req, res) => {
   try {
     const { email, password, level } = req.body;
+
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
       { email, password, level },
       { new: true }
     );
-    if (!updatedUser) return res.status(404).json({ message: "User not found" });
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     res.json({ message: "User updated successfully", user: updatedUser });
   } catch (err) {
@@ -105,7 +112,11 @@ app.put("/users/:id", async (req, res) => {
 app.delete("/users/:id", async (req, res) => {
   try {
     const deleted = await User.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: "User not found" });
+
+    if (!deleted) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     res.json({ message: "User deleted successfully" });
   } catch (err) {
     console.error(err);
@@ -121,6 +132,7 @@ app.get("/bookings", async (req, res) => {
     const bookings = await Booking.find();
     res.json(bookings);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Error fetching bookings" });
   }
 });
@@ -129,33 +141,40 @@ app.get("/bookings", async (req, res) => {
 app.post("/bookings", async (req, res) => {
   try {
     const { username, email, level, date, time } = req.body;
-    if (!email || !level || !date || !time)
+
+    if (!email || !level || !date || !time) {
       return res.status(400).json({ message: "Email, level, date, and time required" });
+    }
 
     const existingBooking = await Booking.findOne({ date, time });
-    if (existingBooking)
+    if (existingBooking) {
       return res.status(400).json({ message: "Slot already booked" });
+    }
 
     const booking = new Booking({
       username: username || email.split("@")[0],
       email,
       level,
       date,
-      time
+      time,
     });
+
     await booking.save();
 
-   await transporter.sendMail({
-  from: `"Flock International" <${process.env.EMAIL_FROM}>`,
-  to: email,
-  subject: "Booking Confirmation",
-  text: `Hi ${booking.username},\nYour booking is confirmed on ${date} at ${time}, Level: ${level}`
-});
+    await mg.messages.create(process.env.MAILGUN_DOMAIN, {
+      from: `Flock International <${process.env.EMAIL_FROM}>`,
+      to: [email],
+      subject: "Booking Confirmation",
+      text: `Hi ${booking.username},\nYour booking is confirmed on ${date} at ${time}, Level: ${level}`,
+    });
 
     res.status(201).json(booking);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error creating booking" });
+    console.error("Booking error:", err);
+    res.status(500).json({
+      message: "Error creating booking",
+      error: err.message,
+    });
   }
 });
 
@@ -163,6 +182,7 @@ app.post("/bookings", async (req, res) => {
 app.put("/bookings/:id", async (req, res) => {
   try {
     const { username, email, level, date, time } = req.body;
+
     const updated = await Booking.findByIdAndUpdate(
       req.params.id,
       {
@@ -170,10 +190,11 @@ app.put("/bookings/:id", async (req, res) => {
         email,
         level,
         date,
-        time
+        time,
       },
       { new: true }
     );
+
     res.json(updated);
   } catch (err) {
     console.error(err);
@@ -187,6 +208,7 @@ app.delete("/bookings/:id", async (req, res) => {
     await Booking.findByIdAndDelete(req.params.id);
     res.json({ message: "Booking deleted" });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Error deleting booking" });
   }
 });
