@@ -1,5 +1,8 @@
 require("dotenv").config();
 
+const dns = require("dns");
+dns.setDefaultResultOrder("ipv4first"); // FIX: force IPv4
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -15,26 +18,37 @@ app.use(express.json());
 
 /* ---------------- EMAIL SETUP ---------------- */
 
-
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
   secure: true,
-  family: 4, // force IPv4
+  family: 4,
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
+  socketTimeout: 20000,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
   }
 });
+
+/* Test SMTP connection */
+
+transporter.verify(function (error, success) {
+  if (error) {
+    console.log("SMTP ERROR:", error);
+  } else {
+    console.log("SMTP READY: Gmail connected");
+  }
+});
+
 /* ---------------- DATABASE ---------------- */
 
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB connected"))
 .catch(err => console.error(err));
 
-
 /* ---------------- USERS ---------------- */
-
 
 // LOGIN
 app.post("/users/login", async (req, res) => {
@@ -65,7 +79,6 @@ app.post("/users/login", async (req, res) => {
 
 });
 
-
 // GET USERS
 app.get("/users", async (req, res) => {
 
@@ -81,7 +94,6 @@ app.get("/users", async (req, res) => {
   }
 
 });
-
 
 // CREATE USER
 app.post("/users", async (req, res) => {
@@ -118,7 +130,6 @@ app.post("/users", async (req, res) => {
 
 });
 
-
 // UPDATE USER
 app.put("/users/:id", async (req, res) => {
 
@@ -145,7 +156,6 @@ app.put("/users/:id", async (req, res) => {
 
 });
 
-
 // DELETE USER
 app.delete("/users/:id", async (req, res) => {
 
@@ -166,9 +176,7 @@ app.delete("/users/:id", async (req, res) => {
 
 });
 
-
 /* ---------------- BOOKINGS ---------------- */
-
 
 // GET BOOKINGS
 app.get("/bookings", async (req, res) => {
@@ -176,7 +184,6 @@ app.get("/bookings", async (req, res) => {
   try {
 
     const bookings = await Booking.find();
-
     res.json(bookings);
 
   } catch (err) {
@@ -188,7 +195,6 @@ app.get("/bookings", async (req, res) => {
   }
 
 });
-
 
 // CREATE BOOKING
 app.post("/bookings", async (req, res) => {
@@ -221,7 +227,6 @@ app.post("/bookings", async (req, res) => {
 
     await booking.save();
 
-
     /* SEND EMAIL */
 
     await transporter.sendMail({
@@ -232,7 +237,6 @@ app.post("/bookings", async (req, res) => {
       text: `Hi ${booking.username}, your booking is confirmed on ${date} at ${time}`
 
     });
-
 
     res.status(201).json({
       message: "Booking created and email sent",
@@ -250,61 +254,6 @@ app.post("/bookings", async (req, res) => {
   }
 
 });
-
-
-// UPDATE BOOKING
-app.put("/bookings/:id", async (req, res) => {
-
-  try {
-
-    const { username, email, level, date, time } = req.body;
-
-    const updated = await Booking.findByIdAndUpdate(
-      req.params.id,
-      {
-        username: username || email.split("@")[0],
-        email,
-        level,
-        date,
-        time
-      },
-      { new: true }
-    );
-
-    res.json(updated);
-
-  } catch (err) {
-
-    res.status(500).json({
-      message: "Error updating booking"
-    });
-
-  }
-
-});
-
-
-// DELETE BOOKING
-app.delete("/bookings/:id", async (req, res) => {
-
-  try {
-
-    await Booking.findByIdAndDelete(req.params.id);
-
-    res.json({
-      message: "Booking deleted"
-    });
-
-  } catch (err) {
-
-    res.status(500).json({
-      message: "Error deleting booking"
-    });
-
-  }
-
-});
-
 
 /* ---------------- SERVER ---------------- */
 
