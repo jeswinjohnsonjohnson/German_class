@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const dns = require("dns");
-dns.setDefaultResultOrder("ipv4first"); // FIX: force IPv4
+dns.setDefaultResultOrder("ipv4first");
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -32,9 +32,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-/* Test SMTP connection */
-
-transporter.verify(function (error, success) {
+transporter.verify(function (error) {
   if (error) {
     console.log("SMTP ERROR:", error);
   } else {
@@ -44,26 +42,30 @@ transporter.verify(function (error, success) {
 
 /* ---------------- DATABASE ---------------- */
 
-mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("MongoDB connected"))
-.catch(err => console.error(err));
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error(err));
 
 /* ---------------- USERS ---------------- */
 
 // LOGIN
 app.post("/users/login", async (req, res) => {
-
   try {
 
     const { email, password } = req.body;
 
     if (!email || !password)
-      return res.status(400).json({ message: "Email and password required" });
+      return res.status(400).json({
+        message: "Email and password required"
+      });
 
     const user = await User.findOne({ email });
 
     if (!user || user.password !== password)
-      return res.status(400).json({ message: "Invalid email or password" });
+      return res.status(400).json({
+        message: "Invalid email or password"
+      });
 
     res.json({
       id: user._id,
@@ -72,32 +74,26 @@ app.post("/users/login", async (req, res) => {
     });
 
   } catch (err) {
-
     res.status(500).json({ message: "Login error" });
-
   }
-
 });
 
 // GET USERS
 app.get("/users", async (req, res) => {
-
   try {
 
     const users = await User.find();
     res.json(users);
 
   } catch (err) {
-
-    res.status(500).json({ message: "Error fetching users" });
-
+    res.status(500).json({
+      message: "Error fetching users"
+    });
   }
-
 });
 
 // CREATE USER
 app.post("/users", async (req, res) => {
-
   try {
 
     const { email, password, level } = req.body;
@@ -121,18 +117,14 @@ app.post("/users", async (req, res) => {
     res.status(201).json(user);
 
   } catch (err) {
-
     res.status(500).json({
       message: "Error creating user"
     });
-
   }
-
 });
 
 // UPDATE USER
 app.put("/users/:id", async (req, res) => {
-
   try {
 
     const { email, password, level } = req.body;
@@ -144,56 +136,55 @@ app.put("/users/:id", async (req, res) => {
     );
 
     if (!updatedUser)
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({
+        message: "User not found"
+      });
 
     res.json(updatedUser);
 
   } catch (err) {
-
-    res.status(500).json({ message: "Error updating user" });
-
+    res.status(500).json({
+      message: "Error updating user"
+    });
   }
-
 });
 
 // DELETE USER
 app.delete("/users/:id", async (req, res) => {
-
   try {
 
     const deleted = await User.findByIdAndDelete(req.params.id);
 
     if (!deleted)
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({
+        message: "User not found"
+      });
 
-    res.json({ message: "User deleted successfully" });
+    res.json({
+      message: "User deleted successfully"
+    });
 
   } catch (err) {
-
-    res.status(500).json({ message: "Error deleting user" });
-
+    res.status(500).json({
+      message: "Error deleting user"
+    });
   }
-
 });
 
 /* ---------------- BOOKINGS ---------------- */
 
 // GET BOOKINGS
 app.get("/bookings", async (req, res) => {
-
   try {
 
     const bookings = await Booking.find();
     res.json(bookings);
 
   } catch (err) {
-
     res.status(500).json({
       message: "Error fetching bookings"
     });
-
   }
-
 });
 
 // CREATE BOOKING
@@ -227,14 +218,13 @@ app.post("/bookings", async (req, res) => {
 
     await booking.save();
 
-    /* SEND EMAIL */
-
+    // SEND EMAIL CONFIRMATION
     await transporter.sendMail({
 
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Booking Confirmation",
-      text: `Hi ${booking.username}, your booking is confirmed on ${date} at ${time}`
+      text: `Hi ${booking.username}, your booking is confirmed on ${date} at ${time}.`
 
     });
 
@@ -249,6 +239,35 @@ app.post("/bookings", async (req, res) => {
 
     res.status(500).json({
       message: "Error creating booking"
+    });
+
+  }
+
+});
+
+// DELETE BOOKING (THIS FIXES YOUR ERROR)
+app.delete("/bookings/:id", async (req, res) => {
+
+  try {
+
+    const deletedBooking = await Booking.findByIdAndDelete(req.params.id);
+
+    if (!deletedBooking)
+      return res.status(404).json({
+        message: "Booking not found"
+      });
+
+    res.json({
+      message: "Booking cancelled successfully",
+      booking: deletedBooking
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+      message: "Error deleting booking"
     });
 
   }
