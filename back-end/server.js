@@ -18,15 +18,14 @@ app.use(express.json());
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  family: 4, // force IPv4 instead of IPv6
+  port: 465,
+  secure: true,
+  family: 4, // force IPv4
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
   }
 });
-
 /* ---------------- DATABASE ---------------- */
 
 mongoose.connect(process.env.MONGO_URI)
