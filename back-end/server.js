@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 const User = require("./models/User");
 const Booking = require("./models/Booking");
 require("dotenv").config();
@@ -9,21 +9,12 @@ require("dotenv").config();
 const app = express();
 app.use(cors());
 app.use(express.json());
-
+const resend = new Resend(process.env.RESEND_API_KEY);
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.error(err));
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
 
 // -------- USERS -------- //
 
@@ -145,12 +136,12 @@ app.post("/bookings", async (req, res) => {
     });
     await booking.save();
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Booking Confirmation",
-      text: `Hi ${booking.username},\nYour booking is confirmed on ${date} at ${time}, Level: ${level}`
-    });
+  await resend.emails.send({
+  from: "onboarding@resend.dev",
+  to: email,
+  subject: "Booking Confirmation",
+  text: `Hi ${booking.username}, your booking is confirmed on ${date} at ${time}`
+});
 
     res.status(201).json(booking);
   } catch (err) {
