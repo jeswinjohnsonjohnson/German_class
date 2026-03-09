@@ -1,7 +1,8 @@
 require("dotenv").config();
 
+/* FIX: force IPv4 instead of IPv6 (important for Railway) */
 const dns = require("dns");
-dns.setDefaultResultOrder("ipv4first"); // FIX: force IPv4
+dns.setDefaultResultOrder("ipv4first");
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -22,7 +23,6 @@ const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
   secure: true,
-  family: 4,
   connectionTimeout: 15000,
   greetingTimeout: 15000,
   socketTimeout: 20000,
@@ -32,13 +32,13 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-/* Test SMTP connection */
+/* Check SMTP connection when server starts */
 
-transporter.verify(function (error, success) {
+transporter.verify((error, success) => {
   if (error) {
     console.log("SMTP ERROR:", error);
   } else {
-    console.log("SMTP READY: Gmail connected");
+    console.log("SMTP READY: Gmail server connected");
   }
 });
 
@@ -229,17 +229,27 @@ app.post("/bookings", async (req, res) => {
 
     /* SEND EMAIL */
 
-    await transporter.sendMail({
+    try {
 
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Booking Confirmation",
-      text: `Hi ${booking.username}, your booking is confirmed on ${date} at ${time}`
+      await transporter.sendMail({
 
-    });
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Booking Confirmation",
+        text: `Hi ${booking.username}, your booking is confirmed on ${date} at ${time}`
+
+      });
+
+      console.log("Email sent");
+
+    } catch (mailError) {
+
+      console.log("Email failed but booking saved:", mailError);
+
+    }
 
     res.status(201).json({
-      message: "Booking created and email sent",
+      message: "Booking created",
       booking
     });
 
