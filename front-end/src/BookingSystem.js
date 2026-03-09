@@ -21,7 +21,7 @@ import { CalendarToday, AccessTime, Star } from "@mui/icons-material";
 
 function BookingSystem({ currentUser, onLogout }) {
 
-  const API_URL = "http://localhost:5000/bookings";
+  const API_URL = "https://germanclass-production.up.railway.app/bookings";
 
   const userEmail =
     currentUser && typeof currentUser === "object"

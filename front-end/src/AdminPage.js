@@ -16,7 +16,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
   }
 
   // ---------------- BOOKINGS -----------------
-  const BOOKING_API = "http://localhost:5000/bookings";
+  const BOOKING_API = "https://germanclass-production.up.railway.app/bookings";
   const [bookings, setBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
   const [bookingSnackbar, setBookingSnackbar] = useState({ open:false, message:"", severity:"success" });
@@ -51,7 +51,7 @@ export default function AdminDashboard({ currentUser, onLogout }) {
   };
 
   // ---------------- USERS -----------------
-  const USER_API = "http://localhost:5000/users";
+  const USER_API = "https://germanclass-production.up.railway.app/users";
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [userSnackbar, setUserSnackbar] = useState({ open:false, message:"", severity:"success" });

@@ -11,7 +11,7 @@ function Login({ onLogin }) {
     if (!email || !password) return alert("Please enter email and password");
 
     try {
-      const res = await fetch("http://localhost:5000/users/login", {
+      const res = await fetch("https://germanclass-production.up.railway.app/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
