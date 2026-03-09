@@ -15,10 +15,13 @@ app.use(express.json());
 
 /* ---------------- EMAIL SETUP ---------------- */
 
+const nodemailer = require("nodemailer");
+
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
   secure: false,
+  family: 4, // force IPv4 instead of IPv6
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
