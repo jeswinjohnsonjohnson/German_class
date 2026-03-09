@@ -13,27 +13,31 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-/* -------------------- EMAIL SETUP -------------------- */
+/* ---------------- EMAIL SETUP ---------------- */
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
   }
 });
 
-/* -------------------- DATABASE -------------------- */
+/* ---------------- DATABASE ---------------- */
 
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB connected"))
 .catch(err => console.error(err));
 
 
-/* -------------------- USERS -------------------- */
+/* ---------------- USERS ---------------- */
 
-// Login
+
+// LOGIN
 app.post("/users/login", async (req, res) => {
+
   try {
 
     const { email, password } = req.body;
@@ -54,14 +58,14 @@ app.post("/users/login", async (req, res) => {
 
   } catch (err) {
 
-    console.error(err);
     res.status(500).json({ message: "Login error" });
 
   }
+
 });
 
 
-// Get users
+// GET USERS
 app.get("/users", async (req, res) => {
 
   try {
@@ -71,7 +75,6 @@ app.get("/users", async (req, res) => {
 
   } catch (err) {
 
-    console.error(err);
     res.status(500).json({ message: "Error fetching users" });
 
   }
@@ -79,7 +82,7 @@ app.get("/users", async (req, res) => {
 });
 
 
-// Create user
+// CREATE USER
 app.post("/users", async (req, res) => {
 
   try {
@@ -87,33 +90,35 @@ app.post("/users", async (req, res) => {
     const { email, password, level } = req.body;
 
     if (!email || !password || !level)
-      return res.status(400).json({ message: "Email, password, level required" });
+      return res.status(400).json({
+        message: "Email, password and level required"
+      });
 
     const existingUser = await User.findOne({ email });
 
     if (existingUser)
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({
+        message: "User already exists"
+      });
 
     const user = new User({ email, password, level });
 
     await user.save();
 
-    res.status(201).json({
-      message: "User created successfully",
-      user
-    });
+    res.status(201).json(user);
 
   } catch (err) {
 
-    console.error(err);
-    res.status(500).json({ message: "Error creating user" });
+    res.status(500).json({
+      message: "Error creating user"
+    });
 
   }
 
 });
 
 
-// Update user
+// UPDATE USER
 app.put("/users/:id", async (req, res) => {
 
   try {
@@ -129,14 +134,10 @@ app.put("/users/:id", async (req, res) => {
     if (!updatedUser)
       return res.status(404).json({ message: "User not found" });
 
-    res.json({
-      message: "User updated",
-      user: updatedUser
-    });
+    res.json(updatedUser);
 
   } catch (err) {
 
-    console.error(err);
     res.status(500).json({ message: "Error updating user" });
 
   }
@@ -144,7 +145,7 @@ app.put("/users/:id", async (req, res) => {
 });
 
 
-// Delete user
+// DELETE USER
 app.delete("/users/:id", async (req, res) => {
 
   try {
@@ -154,7 +155,7 @@ app.delete("/users/:id", async (req, res) => {
     if (!deleted)
       return res.status(404).json({ message: "User not found" });
 
-    res.json({ message: "User deleted" });
+    res.json({ message: "User deleted successfully" });
 
   } catch (err) {
 
@@ -165,27 +166,30 @@ app.delete("/users/:id", async (req, res) => {
 });
 
 
-/* -------------------- BOOKINGS -------------------- */
+/* ---------------- BOOKINGS ---------------- */
 
 
-// Get bookings
+// GET BOOKINGS
 app.get("/bookings", async (req, res) => {
 
   try {
 
     const bookings = await Booking.find();
+
     res.json(bookings);
 
   } catch (err) {
 
-    res.status(500).json({ message: "Error fetching bookings" });
+    res.status(500).json({
+      message: "Error fetching bookings"
+    });
 
   }
 
 });
 
 
-// Create booking
+// CREATE BOOKING
 app.post("/bookings", async (req, res) => {
 
   try {
@@ -194,7 +198,7 @@ app.post("/bookings", async (req, res) => {
 
     if (!email || !level || !date || !time)
       return res.status(400).json({
-        message: "Email, level, date and time required"
+        message: "Email, level, date, and time required"
       });
 
     const existingBooking = await Booking.findOne({ date, time });
@@ -217,14 +221,14 @@ app.post("/bookings", async (req, res) => {
     await booking.save();
 
 
-    /* -------- SEND EMAIL -------- */
+    /* SEND EMAIL */
 
     await transporter.sendMail({
 
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Booking Confirmation",
-      text: `Hi ${booking.username}, your booking is confirmed on ${date} at ${time}.`
+      text: `Hi ${booking.username}, your booking is confirmed on ${date} at ${time}`
 
     });
 
@@ -237,6 +241,7 @@ app.post("/bookings", async (req, res) => {
   } catch (err) {
 
     console.error(err);
+
     res.status(500).json({
       message: "Error creating booking"
     });
@@ -246,7 +251,7 @@ app.post("/bookings", async (req, res) => {
 });
 
 
-// Update booking
+// UPDATE BOOKING
 app.put("/bookings/:id", async (req, res) => {
 
   try {
@@ -278,7 +283,7 @@ app.put("/bookings/:id", async (req, res) => {
 });
 
 
-// Delete booking
+// DELETE BOOKING
 app.delete("/bookings/:id", async (req, res) => {
 
   try {
@@ -300,7 +305,7 @@ app.delete("/bookings/:id", async (req, res) => {
 });
 
 
-/* -------------------- SERVER -------------------- */
+/* ---------------- SERVER ---------------- */
 
 const PORT = process.env.PORT || 5000;
 
