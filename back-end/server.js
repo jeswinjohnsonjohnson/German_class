@@ -16,7 +16,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error(err));
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
+  host: "smtp.mailgun.org",
   port: 587,
   secure: false,
   auth: {
@@ -145,12 +145,12 @@ app.post("/bookings", async (req, res) => {
     });
     await booking.save();
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Booking Confirmation",
-      text: `Hi ${booking.username},\nYour booking is confirmed on ${date} at ${time}, Level: ${level}`
-    });
+   await transporter.sendMail({
+  from: `"Flock International" <${process.env.EMAIL_FROM}>`,
+  to: email,
+  subject: "Booking Confirmation",
+  text: `Hi ${booking.username},\nYour booking is confirmed on ${date} at ${time}, Level: ${level}`
+});
 
     res.status(201).json(booking);
   } catch (err) {
