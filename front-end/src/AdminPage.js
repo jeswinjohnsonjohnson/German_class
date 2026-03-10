@@ -148,9 +148,9 @@ setUserFormData({
 _id:user._id,
 username:user.username,
 email:user.email,
+password:user.password,
 level:user.level
 });
-
 }else{
 
 setUserIsEditing(false);
@@ -424,6 +424,7 @@ Add User
 <TableRow>
 <TableCell>Username</TableCell>
 <TableCell>Email</TableCell>
+<TableCell>Password</TableCell>
 <TableCell>Level</TableCell>
 <TableCell>Documents</TableCell>
 <TableCell>Action</TableCell>
@@ -439,22 +440,36 @@ Add User
 
 <TableCell>{u.username}</TableCell>
 <TableCell>{u.email}</TableCell>
+<TableCell>{u.password}</TableCell>
 <TableCell>{u.level}</TableCell>
-
 <TableCell>
 
-{u.documents?.length>0 ?
+{u.documents?.length > 0 ?
 
-u.documents.map((doc,i)=>(
-<div key={i}>
-<a href={doc.fileUrl} target="_blank">{doc.name}</a>
-</div>
+u.documents.map((doc) => (
+
+  <div key={doc._id} style={{ marginBottom: 4 }}>
+
+    <a href={doc.fileUrl} target="_blank" rel="noreferrer">
+      {doc.name}
+    </a>
+
+    <Button
+      size="small"
+      color="error"
+      sx={{ ml: 1 }}
+      onClick={() => handleDeleteDocument(u._id, doc._id)}
+    >
+      Delete
+    </Button>
+
+  </div>
+
 ))
 
 :
 
 "No documents"
-
 }
 
 </TableCell>
@@ -515,18 +530,13 @@ value={userFormData.email}
 onChange={e=>setUserFormData({...userFormData,email:e.target.value})}
 />
 
-{!userIsEditing &&
-
 <TextField
 fullWidth
 label="Password"
-type="password"
 margin="dense"
 value={userFormData.password}
 onChange={e=>setUserFormData({...userFormData,password:e.target.value})}
 />
-
-}
 
 <TextField
 select
