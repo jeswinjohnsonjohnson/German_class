@@ -494,7 +494,13 @@ return (
   events={calendarEvents}
   height="auto"
 
-  dayMaxEvents={2}   // 👈 important fix
+  eventTimeFormat={{
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }}
+
+  dayMaxEvents={isMobile ? 1 : true}
 
   headerToolbar={
     isMobile
