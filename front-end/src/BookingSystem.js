@@ -62,7 +62,7 @@ const [meetAnchor, setMeetAnchor] = useState(null);
 
   const timeSlots = [
     "08:00",
-    "10:00",
+    "11:00",
     "12:00",
     "14:00",
     "16:00",
@@ -82,7 +82,15 @@ const meetLinks = {
       .then(data => setDocuments(data))
       .catch(err => console.error(err));
   }, []);
+const showMessage = (message, color = "#4caf50") => {
 
+  if (isMobile) {
+    alert(message);   // default mobile alert
+  } else {
+    showMessage("You cannot book more than 3 slots per week.", "#d4c85f");
+  }
+
+};
   const getWeekStartEndStr = (dateStr) => {
 
     const date = new Date(dateStr);
@@ -236,9 +244,7 @@ const availableTimes = useMemo(() => {
 
     if (weeklyCount >= 3) {
 
-      setSnackbarMessage("You cannot book more than 3 slots per week.");
-      setSnackbarColor("#d4c85f");
-      setSnackbarOpen(true);
+      showMessage("You cannot book more than 3 slots per week.", "#d4c85f");
       return;
 
     }
@@ -326,9 +332,6 @@ setCalendarEvents((prev) => [
 );
 
     setSnackbarMessage("Booking deleted successfully");
-    setSnackbarColor("#d32f2f");
-    setSnackbarOpen(true);
-
     try {
 
       await fetch(`${API_URL}/${id}`, {
@@ -368,9 +371,7 @@ setCalendarEvents((prev) => [
   ).length;
 
   if (weeklyCount >= 3) {
-    setSnackbarMessage("You cannot book more than 3 slots per week.");
-    setSnackbarColor("#d4c85f");
-    setSnackbarOpen(true);
+    showMessage("You cannot book more than 3 slots per week.", "#d4c85f");
     return;
   }
 
