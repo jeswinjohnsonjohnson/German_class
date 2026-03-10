@@ -350,7 +350,48 @@ res.status(500).json({message:"Error deleting booking"});
 }
 
 });
+// ======================================================
+// GET ALL DOCUMENTS
+// ======================================================
 
+app.get("/documents", async (req, res) => {
+
+  try {
+
+    const users = await User.find();
+
+    const documents = [];
+
+    users.forEach(user => {
+
+      if (user.documents && user.documents.length > 0) {
+
+        user.documents.forEach(doc => {
+
+          documents.push({
+            _id: doc._id,
+            userId: user._id,
+            username: user.username,
+            name: doc.name,
+            fileUrl: doc.fileUrl
+          });
+
+        });
+
+      }
+
+    });
+
+    res.json(documents);
+
+  } catch (err) {
+
+    console.error(err);
+    res.status(500).json({ message: "Error fetching documents" });
+
+  }
+
+});
 
 // ======================================================
 // START SERVER
