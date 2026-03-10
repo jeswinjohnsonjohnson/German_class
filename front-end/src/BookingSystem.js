@@ -61,13 +61,14 @@ const [meetAnchor, setMeetAnchor] = useState(null);
   const bookingsPerPage = 3;
 
   const timeSlots = [
-    "07:30",
-    "09:30",
-    "11:30",
-    "13:30",
-    "15:30",
-    "17:30",
-    "19:30"
+    "08:00",
+    "10:00",
+    "12:00",
+    "14:00",
+    "16:00",
+    "18:00",
+    "20:00",
+    "22:00"
   ];
 const meetLinks = {
   A1: "https://meet.google.com/akj-wzxd-ejn",
@@ -103,6 +104,14 @@ const meetLinks = {
 
   };
 
+  useEffect(() => {
+  const interval = setInterval(() => {
+    fetchBookings();
+  }, 3000); // refresh every 3 seconds
+
+  return () => clearInterval(interval);
+}, []);
+
   const fetchBookings = async () => {
 
     try {
@@ -122,24 +131,19 @@ const meetLinks = {
       setBookedSlots(cleaned);
 
       setCalendarEvents(
-        cleaned.map((b) => {
-
-          const eventDate = new Date(`${b.date}T${b.time}`);
-          const isPast = eventDate <= new Date();
-
-          return {
-            title: b.level,
-            start: `${b.date}T${b.time}:00`,
-            display: "block",
-            color: isPast
-              ? "#b0b0b0"
-              : b.email === userEmail
-              ? "#4caf50"
-              : "#ff4d4d"
-          };
-
-        })
-      );
+  cleaned.map((b) => ({
+    id: b._id, // ⭐ IMPORTANT
+    title: b.level,
+    start: `${b.date}T${b.time}:00`,
+    display: "block",
+    color:
+      new Date(`${b.date}T${b.time}`) <= new Date()
+        ? "#b0b0b0"
+        : b.email === userEmail
+        ? "#4caf50"
+        : "#ff4d4d"
+  }))
+);
 
     } catch (err) {
       console.error(err);
@@ -262,15 +266,18 @@ const availableTimes = useMemo(() => {
       { ...booking, _id: Math.random().toString() }
     ]);
 
-    setCalendarEvents((prev) => [
-      ...prev,
-      {
-        title: level,
-        start: `${selectedDate}T${time}:00`,
-        display: "block",
-        color: "#4caf50"
-      }
-    ]);
+   const tempId = Math.random().toString();
+
+setCalendarEvents((prev) => [
+  ...prev,
+  {
+    id: tempId,
+    title: level,
+    start: `${selectedDate}T${time}:00`,
+    display: "block",
+    color: "#4caf50"
+  }
+]);
 
     setSnackbarColor("#4caf50");
     setSnackbarMessage(`Booking saved for ${selectedDate} at ${time} (${level})`);
@@ -315,11 +322,8 @@ const availableTimes = useMemo(() => {
     }
 
     setCalendarEvents((prev) =>
-      prev.filter(
-        (e) =>
-          e.start !== `${bookingToDelete.date}T${bookingToDelete.time}:00`
-      )
-    );
+  prev.filter((e) => e.id !== id)
+);
 
     setSnackbarMessage("Booking deleted successfully");
     setSnackbarColor("#d32f2f");
@@ -350,6 +354,33 @@ const availableTimes = useMemo(() => {
     (page - 1) * bookingsPerPage,
     page * bookingsPerPage
   );
+ const handleEventClick = (info) => {
+  const event = info.event;
+
+  const date = event.startStr.split("T")[0];
+  const { startStr, endStr } = getWeekStartEndStr(date);
+
+  const weeklyCount = bookedSlots.filter(
+    (b) =>
+      b.email === userEmail &&
+      b.date >= startStr &&
+      b.date <= endStr
+  ).length;
+
+  if (weeklyCount >= 3) {
+    setSnackbarMessage("You cannot book more than 3 slots per week.");
+    setSnackbarColor("#d4c85f");
+    setSnackbarOpen(true);
+    return;
+  }
+
+  const time = event.startStr.split("T")[1].slice(0,5);
+
+  setSelectedDate(date);
+  setTime(time);
+  setLevel(event.title);
+  setOpenDialog(true);
+};
 
 return (
 
@@ -418,7 +449,7 @@ return (
             startIcon={<Description />}
             onClick={() => setOpenDocs(true)}
           >
-            Documents
+          MATERIALS
           </Button>
 
           <Button
@@ -455,10 +486,11 @@ return (
           }}
         >
 
-         <FullCalendar
+       <FullCalendar
   plugins={[dayGridPlugin, interactionPlugin]}
   initialView="dayGridMonth"
   dateClick={handleDateClick}
+  eventClick={handleEventClick}
   events={calendarEvents}
   height="auto"
   headerToolbar={
