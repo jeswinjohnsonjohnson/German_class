@@ -486,7 +486,7 @@ return (
           }}
         >
 
-    <FullCalendar
+  <FullCalendar
   plugins={[dayGridPlugin, interactionPlugin]}
   initialView="dayGridMonth"
   dateClick={handleDateClick}
@@ -494,11 +494,7 @@ return (
   events={calendarEvents}
   height="auto"
 
-  eventTimeFormat={{
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  }}
+  dayMaxEvents={2}   // 👈 important fix
 
   headerToolbar={
     isMobile
@@ -795,22 +791,20 @@ return (
 
 </Menu>
       {/* SNACKBAR */}
-<Snackbar
-  open={snackbarOpen}
-  autoHideDuration={3000}
-  onClose={() => setSnackbarOpen(false)}
-  message={snackbarMessage}
-  anchorOrigin={
-    isMobile
-      ? { vertical: "center", horizontal: "left" }   // mobile
-      : { vertical: "top", horizontal: "right" }     // desktop
-  }
-  sx={{
-    "& .MuiSnackbarContent-root": {
-      backgroundColor: snackbarColor
-    }
-  }}
-/>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        sx={{
+          "& .MuiSnackbarContent-root": {
+            backgroundColor: snackbarColor
+          }
+        }}
+        
+      />
       
 
     </Box>
