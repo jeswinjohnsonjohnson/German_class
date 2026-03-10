@@ -42,8 +42,10 @@ function BookingSystem({ currentUser, onLogout }) {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarColor, setSnackbarColor] = useState("#4caf50");
-const [documents, setDocuments] = useState([]);
-const [openDocs, setOpenDocs] = useState(false);
+
+  const [documents, setDocuments] = useState([]);
+  const [openDocs, setOpenDocs] = useState(false);
+
   const [page, setPage] = useState(1);
   const bookingsPerPage = 3;
 
@@ -57,15 +59,12 @@ const [openDocs, setOpenDocs] = useState(false);
     "19:30"
   ];
 
-
   useEffect(() => {
-
-  fetch("https://germanclass-production.up.railway.app/documents")
-    .then(res => res.json())
-    .then(data => setDocuments(data))
-    .catch(err => console.error(err));
-
-}, []);
+    fetch("https://germanclass-production.up.railway.app/documents")
+      .then(res => res.json())
+      .then(data => setDocuments(data))
+      .catch(err => console.error(err));
+  }, []);
 
   const getWeekStartEndStr = (dateStr) => {
 
@@ -136,19 +135,19 @@ const [openDocs, setOpenDocs] = useState(false);
     fetchBookings();
   }, []);
 
-useEffect(() => {
+  useEffect(() => {
 
-  const userBookings = bookedSlots.filter(
-    (b) => b.email === userEmail
-  );
+    const userBookings = bookedSlots.filter(
+      (b) => b.email === userEmail
+    );
 
-  const totalPages = Math.ceil(userBookings.length / bookingsPerPage);
+    const totalPages = Math.ceil(userBookings.length / bookingsPerPage);
 
-  if (page > totalPages && totalPages > 0) {
-    setPage(totalPages);
-  }
+    if (page > totalPages && totalPages > 0) {
+      setPage(totalPages);
+    }
 
-}, [bookedSlots]);
+  }, [bookedSlots]);
 
   const availableTimes = useMemo(() => {
 
@@ -240,10 +239,7 @@ useEffect(() => {
 
     setBookedSlots((prev) => [
       ...prev,
-      {
-        ...booking,
-        _id: Math.random().toString()
-      }
+      { ...booking, _id: Math.random().toString() }
     ]);
 
     setCalendarEvents((prev) => [
@@ -337,13 +333,35 @@ useEffect(() => {
 
   return (
 
-    <Box sx={{ maxWidth: 1200, mx: "auto", p: { xs: 2, md: 3 } }}>
+    <Box
+      sx={{
+        maxWidth: 1200,
+        mx: "auto",
+        px: { xs: 1.5, sm: 2, md: 3 },
+        py: { xs: 2, md: 3 }
+      }}
+    >
 
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+      {/* HEADER */}
+
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        justifyContent="space-between"
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        spacing={{ xs: 2, sm: 0 }}
+        mb={3}
+      >
 
         <Stack direction="row" alignItems="center" spacing={2}>
 
-          <Box component="img" src="/logo.png" alt="logo" sx={{ height: { xs: 70, sm: 120 } }} />
+          <Box
+            component="img"
+            src="/logo.png"
+            alt="logo"
+            sx={{
+              height: { xs: 60, sm: 80, md: 110 }
+            }}
+          />
 
           <Typography variant="h6" color="primary" fontWeight="bold">
             Welcome, {username} 👋
@@ -351,32 +369,54 @@ useEffect(() => {
 
         </Stack>
 
-        <Stack direction="row" spacing={1}>
+        <Stack
+          direction="row"
+          spacing={1}
+          flexWrap="wrap"
+          justifyContent={{ xs: "flex-start", sm: "flex-end" }}
+        >
 
-  <Button
-    variant="outlined"
-    startIcon={<Description />}
-    onClick={() => setOpenDocs(true)}
-  >
-    Documents
-  </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Description />}
+            onClick={() => setOpenDocs(true)}
+          >
+            Documents
+          </Button>
 
-  <Button
-    variant="outlined"
-    color="error"
-    size="small"
-    onClick={onLogout}
-  >
-    Logout
-  </Button>
+          <Button
+            variant="outlined"
+            color="error"
+            size="small"
+            onClick={onLogout}
+          >
+            Logout
+          </Button>
 
-</Stack>
+        </Stack>
 
       </Stack>
 
-      <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3 }}>
+      {/* MAIN LAYOUT */}
 
-        <Paper sx={{ flex: 2, p: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          gap: 3,
+          alignItems: "stretch"
+        }}
+      >
+
+        {/* CALENDAR */}
+
+        <Paper
+          sx={{
+            flex: 2,
+            p: { xs: 1, sm: 2 },
+            overflowX: "auto"
+          }}
+        >
 
           <FullCalendar
             plugins={[dayGridPlugin, interactionPlugin]}
@@ -396,7 +436,18 @@ useEffect(() => {
 
         </Paper>
 
-        <Paper sx={{ width: { xs: "100%", md: 320 }, p: 3, bgcolor: "#f9f9f9", display: "flex", flexDirection: "column", height: { xs: "auto", md: 650 } }}>
+        {/* BOOKINGS PANEL */}
+
+        <Paper
+          sx={{
+            width: { xs: "100%", md: 320 },
+            p: 3,
+            bgcolor: "#f9f9f9",
+            display: "flex",
+            flexDirection: "column",
+            height: { xs: "auto", md: 650 }
+          }}
+        >
 
           <Typography variant="h6" mb={2} color="primary" fontWeight="bold">
             Your Bookings
@@ -449,36 +500,6 @@ useEffect(() => {
 
               </Box>
 
-              {totalPages > 1 && (
-
-                <Stack direction="row" justifyContent="center" spacing={2} mt={2}>
-
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    disabled={page === 1}
-                    onClick={() => setPage((p) => p - 1)}
-                  >
-                    Previous
-                  </Button>
-
-                  <Typography variant="body2">
-                    Page {page} / {totalPages}
-                  </Typography>
-
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    disabled={page === totalPages}
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    Next
-                  </Button>
-
-                </Stack>
-
-              )}
-
             </>
 
           ) : (
@@ -489,7 +510,14 @@ useEffect(() => {
 
       </Box>
 
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+      {/* BOOKING DIALOG */}
+
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        fullWidth
+        maxWidth="xs"
+      >
 
         <DialogTitle>Book a Slot for {selectedDate}</DialogTitle>
 
@@ -535,68 +563,72 @@ useEffect(() => {
 
       </Dialog>
 
+      {/* DOCUMENTS DIALOG */}
+
       <Dialog
-  open={openDocs}
-  onClose={() => setOpenDocs(false)}
-  maxWidth="sm"
-  fullWidth
->
+        open={openDocs}
+        onClose={() => setOpenDocs(false)}
+        maxWidth="sm"
+        fullWidth
+      >
 
-  <DialogTitle>Documents</DialogTitle>
+        <DialogTitle>Documents</DialogTitle>
 
-  <DialogContent>
+        <DialogContent>
 
-    {documents.length > 0 ? (
+          {documents.length > 0 ? (
 
-      <Stack spacing={2} mt={1}>
+            <Stack spacing={2} mt={1}>
 
-        {documents.map((doc) => (
+              {documents.map((doc) => (
 
-          <Paper
-            key={doc._id}
-            sx={{
-              p: 2,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center"
-            }}
-          >
+                <Paper
+                  key={doc._id}
+                  sx={{
+                    p: 2,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center"
+                  }}
+                >
 
-            <Typography>{doc.name}</Typography>
+                  <Typography>{doc.name}</Typography>
 
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<Download />}
-              href={doc.fileUrl}
-              target="_blank"
-            >
-              Download
-            </Button>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<Download />}
+                    href={doc.fileUrl}
+                    target="_blank"
+                  >
+                    Download
+                  </Button>
 
-          </Paper>
+                </Paper>
 
-        ))}
+              ))}
 
-      </Stack>
+            </Stack>
 
-    ) : (
+          ) : (
 
-      <Typography mt={2}>
-        No documents available
-      </Typography>
+            <Typography mt={2}>
+              No documents available
+            </Typography>
 
-    )}
+          )}
 
-  </DialogContent>
+        </DialogContent>
 
-  <DialogActions>
-    <Button onClick={() => setOpenDocs(false)}>
-      Close
-    </Button>
-  </DialogActions>
+        <DialogActions>
+          <Button onClick={() => setOpenDocs(false)}>
+            Close
+          </Button>
+        </DialogActions>
 
-</Dialog>
+      </Dialog>
+
+      {/* SNACKBAR */}
 
       <Snackbar
         open={snackbarOpen}
