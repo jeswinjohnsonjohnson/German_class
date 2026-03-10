@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
+
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { Description, Download } from "@mui/icons-material";
-import { Menu, MenuItem } from "@mui/material"; 
-import { VideoCall } from "@mui/icons-material";
+
 import {
   TextField,
   Button,
@@ -17,15 +16,26 @@ import {
   DialogActions,
   Snackbar,
   Stack,
-  Chip
+  Chip,
+  Menu,
+  MenuItem,
+  useTheme,
+  useMediaQuery
 } from "@mui/material";
 
-import { CalendarToday, AccessTime, Star } from "@mui/icons-material";
+import {
+  Description,
+  Download,
+  VideoCall,
+  CalendarToday,
+  AccessTime,
+  Star
+} from "@mui/icons-material";
 
 function BookingSystem({ currentUser, onLogout }) {
-
+ const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const API_URL = "https://germanclass-production.up.railway.app/bookings";
-
   const userEmail =
     currentUser && typeof currentUser === "object"
       ? currentUser.email
@@ -445,21 +455,29 @@ return (
           }}
         >
 
-          <FullCalendar
-            plugins={[dayGridPlugin, interactionPlugin]}
-            initialView="dayGridMonth"
-            dateClick={handleDateClick}
-            events={calendarEvents}
-            height="auto"
-            headerToolbar={{
-              left: "prev,next today",
-              center: "title",
-              right: "dayGridMonth,dayGridWeek"
-            }}
-            validRange={{
-              start: new Date().toISOString().split("T")[0]
-            }}
-          />
+         <FullCalendar
+  plugins={[dayGridPlugin, interactionPlugin]}
+  initialView="dayGridMonth"
+  dateClick={handleDateClick}
+  events={calendarEvents}
+  height="auto"
+  headerToolbar={
+    isMobile
+      ? {
+          left: "prev,next",
+          center: "title",
+          right: "today"
+        }
+      : {
+          left: "prev,next today",
+          center: "title",
+          right: "dayGridMonth,dayGridWeek"
+        }
+  }
+  validRange={{
+    start: new Date().toISOString().split("T")[0]
+  }}
+/>
 
         </Paper>
 
