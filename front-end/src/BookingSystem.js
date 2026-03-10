@@ -486,13 +486,20 @@ return (
           }}
         >
 
-       <FullCalendar
+    <FullCalendar
   plugins={[dayGridPlugin, interactionPlugin]}
   initialView="dayGridMonth"
   dateClick={handleDateClick}
   eventClick={handleEventClick}
   events={calendarEvents}
   height="auto"
+
+  eventTimeFormat={{
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }}
+
   headerToolbar={
     isMobile
       ? {
@@ -506,6 +513,7 @@ return (
           right: "dayGridMonth,dayGridWeek"
         }
   }
+
   validRange={{
     start: new Date().toISOString().split("T")[0]
   }}
