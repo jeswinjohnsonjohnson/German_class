@@ -19,24 +19,33 @@ import {
   Chip
 } from "@mui/material";
 
-import { CalendarToday, AccessTime, Star } from "@mui/icons-material";
+import { CalendarToday, AccessTime, Star, Description } from "@mui/icons-material";
 
 function BookingSystem({ currentUser, onLogout }) {
 
   const API_URL = "https://germanclass-production.up.railway.app/bookings";
+  const DOC_API = "https://germanclass-production.up.railway.app/documents";
 
   const userEmail =
     currentUser && typeof currentUser === "object"
       ? currentUser.email
       : currentUser;
 
-  const username = currentUser?.username || userEmail?.split("@")[0];
+  const username =
+    currentUser?.username ||
+    userEmail?.split("@")[0] ||
+    "Student";
 
   const [selectedDate, setSelectedDate] = useState(null);
   const [level, setLevel] = useState("");
   const [time, setTime] = useState("");
+
   const [bookedSlots, setBookedSlots] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);
+
+  const [documents, setDocuments] = useState([]);
+  const [openDocs, setOpenDocs] = useState(false);
+
   const [openDialog, setOpenDialog] = useState(false);
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -56,6 +65,25 @@ function BookingSystem({ currentUser, onLogout }) {
     "19:30"
   ];
 
+  const studentDocs = useMemo(() => {
+    if (!currentUser?.level) return [];
+    return documents.filter(doc => doc.level === currentUser.level);
+  }, [documents, currentUser]);
+
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      try {
+        const res = await fetch(DOC_API);
+        const data = await res.json();
+        setDocuments(data);
+      } catch (err) {
+        console.error("Failed to fetch documents:", err);
+      }
+    };
+
+    fetchDocuments();
+  }, []);
+
   const getWeekStartEndStr = (dateStr) => {
 
     const date = new Date(dateStr);
@@ -74,7 +102,6 @@ function BookingSystem({ currentUser, onLogout }) {
       startStr: toYMD(monday),
       endStr: toYMD(sunday)
     };
-
   };
 
   const fetchBookings = async () => {
@@ -136,7 +163,7 @@ function BookingSystem({ currentUser, onLogout }) {
     const now = new Date();
     const todayStr = now.toISOString().split("T")[0];
 
-    if (selectedDate < todayStr) return [];
+    if (new Date(selectedDate) < new Date(todayStr)) return [];
 
     return timeSlots.filter((t) => {
 
@@ -208,7 +235,14 @@ function BookingSystem({ currentUser, onLogout }) {
 
   const sendBooking = async () => {
 
-    if (!level || !time) return;
+    if (!level || !time || !selectedDate) {
+
+      setSnackbarMessage("Please select level and time.");
+      setSnackbarColor("#d32f2f");
+      setSnackbarOpen(true);
+      return;
+
+    }
 
     const booking = {
       email: userEmail,
@@ -219,10 +253,7 @@ function BookingSystem({ currentUser, onLogout }) {
 
     setBookedSlots((prev) => [
       ...prev,
-      {
-        ...booking,
-        _id: Math.random().toString()
-      }
+      { ...booking, _id: Math.random().toString() }
     ]);
 
     setCalendarEvents((prev) => [
@@ -245,9 +276,7 @@ function BookingSystem({ currentUser, onLogout }) {
 
       await fetch(API_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(booking)
       });
 
@@ -262,9 +291,9 @@ function BookingSystem({ currentUser, onLogout }) {
   const cancelBooking = async (id) => {
 
     const bookingToDelete = bookedSlots.find((b) => b._id === id);
+    if (!bookingToDelete) return;
 
     const updatedBookings = bookedSlots.filter((b) => b._id !== id);
-
     setBookedSlots(updatedBookings);
 
     const userUpdatedBookings = updatedBookings.filter(
@@ -303,9 +332,9 @@ function BookingSystem({ currentUser, onLogout }) {
 
   };
 
-  const userBookings = bookedSlots.filter(
-    (b) => b.email === userEmail
-  );
+  const userBookings = bookedSlots
+    .filter((b) => b.email === userEmail)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const totalPages = Math.ceil(userBookings.length / bookingsPerPage);
 
@@ -318,23 +347,47 @@ function BookingSystem({ currentUser, onLogout }) {
 
     <Box sx={{ maxWidth: 1200, mx: "auto", p: { xs: 2, md: 3 } }}>
 
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+     
 
-        <Stack direction="row" alignItems="center" spacing={2}>
+     <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
 
-          <Box component="img" src="/logo.png" alt="logo" sx={{ height: { xs: 70, sm: 120 } }} />
+  <Stack direction="row" alignItems="center" spacing={2}>
 
-          <Typography variant="h6" color="primary" fontWeight="bold">
-            Welcome, {username} 👋
-          </Typography>
+    <Box
+      component="img"
+      src="/logo.png"
+      alt="logo"
+      sx={{ height: { xs: 70, sm: 120 } }}
+    />
 
-        </Stack>
+    <Typography variant="h6" color="primary" fontWeight="bold">
+      Welcome, {username} 👋
+    </Typography>
 
-        <Button variant="outlined" color="error" size="small" onClick={onLogout}>
-          Logout
-        </Button>
+  </Stack>
 
-      </Stack>
+ <Stack direction="row" spacing={2}>
+
+  <Button
+    variant="contained"
+    startIcon={<Description />}
+    onClick={() => setOpenDocs(true)}
+  >
+    Study Documents
+  </Button>
+
+  <Button
+    variant="outlined"
+    color="error"
+    size="small"
+    onClick={onLogout}
+  >
+    Logout
+  </Button>
+
+</Stack>
+
+</Stack>
 
       <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3 }}>
 
@@ -411,36 +464,6 @@ function BookingSystem({ currentUser, onLogout }) {
 
               </Box>
 
-              {totalPages > 1 && (
-
-                <Stack direction="row" justifyContent="center" spacing={2} mt={2}>
-
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    disabled={page === 1}
-                    onClick={() => setPage((p) => p - 1)}
-                  >
-                    Previous
-                  </Button>
-
-                  <Typography variant="body2">
-                    Page {page} / {totalPages}
-                  </Typography>
-
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    disabled={page === totalPages}
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    Next
-                  </Button>
-
-                </Stack>
-
-              )}
-
             </>
 
           ) : (
@@ -451,48 +474,42 @@ function BookingSystem({ currentUser, onLogout }) {
 
       </Box>
 
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+      {/* DOCUMENTS DIALOG */}
+      <Dialog open={openDocs} onClose={() => setOpenDocs(false)}>
 
-        <DialogTitle>Book a Slot for {selectedDate}</DialogTitle>
+        <DialogTitle>Study Documents</DialogTitle>
 
         <DialogContent>
 
-          <TextField
-            select
-            fullWidth
-            label="Level"
-            value={level}
-            onChange={(e) => setLevel(e.target.value)}
-            margin="normal"
-          >
-            {["A1", "A2", "B1", "B2"].map((l) => (
-              <MenuItem key={l} value={l}>{l}</MenuItem>
-            ))}
-          </TextField>
+          {studentDocs.length === 0 ? (
 
-          <TextField
-            select
-            fullWidth
-            label="Time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            margin="normal"
-          >
-            {availableTimes.map((t) => (
-              <MenuItem key={t} value={t}>{t}</MenuItem>
-            ))}
-          </TextField>
+            <Typography>No documents available</Typography>
+
+          ) : (
+
+            <Stack spacing={2} mt={1}>
+
+              {studentDocs.map((doc) => (
+
+                <Button
+                  key={doc._id}
+                  variant="outlined"
+                  href={doc.url}
+                  target="_blank"
+                >
+                  {doc.name}
+                </Button>
+
+              ))}
+
+            </Stack>
+
+          )}
 
         </DialogContent>
 
         <DialogActions>
-
-          <Button onClick={() => setOpenDialog(false)}>Close</Button>
-
-          <Button onClick={sendBooking} disabled={!level || !time}>
-            Book
-          </Button>
-
+          <Button onClick={() => setOpenDocs(false)}>Close</Button>
         </DialogActions>
 
       </Dialog>

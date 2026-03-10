@@ -27,510 +27,565 @@ const LEVELS = ["A1","A2","B1","B2","C1","C2"];
 
 export default function AdminDashboard({ currentUser, onLogout }) {
 
-  const BOOKING_API = "https://germanclass-production.up.railway.app/bookings";
-  const USER_API = "https://germanclass-production.up.railway.app/users";
-
-  const [bookings,setBookings] = useState([]);
-  const [loadingBookings,setLoadingBookings] = useState(true);
-
-  const [users,setUsers] = useState([]);
-  const [loadingUsers,setLoadingUsers] = useState(true);
-
-  const [bookingSnackbar,setBookingSnackbar] = useState({open:false,message:"",severity:"success"});
-  const [userSnackbar,setUserSnackbar] = useState({open:false,message:"",severity:"success"});
-
-  const [deleteBookingDialog,setDeleteBookingDialog] = useState(false);
-  const [selectedBookingId,setSelectedBookingId] = useState(null);
-
-  const [userFormOpen,setUserFormOpen] = useState(false);
-  const [userIsEditing,setUserIsEditing] = useState(false);
-
-  const [userFormData,setUserFormData] = useState({
-    username:"",
-    email:"",
-    password:"",
-    level:"A1"
-  });
-
-  useEffect(()=>{
-    if(!currentUser || currentUser.email !== "jeswinjohnson54@gmail.com"){
-      alert("Access denied");
-      window.location.href="/";
-    }
-  },[currentUser]);
-
-  // ---------------- FETCH BOOKINGS ----------------
-
-  const fetchBookings = async ()=>{
-    try{
-      setLoadingBookings(true);
-      const res = await fetch(BOOKING_API);
-      const data = await res.json();
-      setBookings(data.sort((a,b)=>new Date(a.date)-new Date(b.date)));
-    }
-    catch(err){
-      setBookingSnackbar({open:true,message:"Error fetching bookings",severity:"error"});
-    }
-    finally{
-      setLoadingBookings(false);
-    }
-  };
-
-  // ---------------- FETCH USERS ----------------
-
-  const fetchUsers = async ()=>{
-    try{
-      setLoadingUsers(true);
-      const res = await fetch(USER_API);
-      const data = await res.json();
-      setUsers(data);
-    }
-    catch(err){
-      setUserSnackbar({open:true,message:"Error fetching users",severity:"error"});
-    }
-    finally{
-      setLoadingUsers(false);
-    }
-  };
-
-  useEffect(()=>{
-    fetchBookings();
-    fetchUsers();
-  },[]);
-
-  // ---------------- DELETE BOOKING ----------------
-
-  const handleDeleteBooking = async ()=>{
-    try{
-
-      const res = await fetch(`${BOOKING_API}/${selectedBookingId}`,{
-        method:"DELETE"
-      });
-
-      if(!res.ok) throw new Error();
-
-      setBookingSnackbar({
-        open:true,
-        message:"Booking deleted",
-        severity:"success"
-      });
-
-      fetchBookings();
-    }
-    catch{
-      setBookingSnackbar({
-        open:true,
-        message:"Error deleting booking",
-        severity:"error"
-      });
-    }
-
-    setDeleteBookingDialog(false);
-  };
-
-  // ---------------- USER FORM OPEN ----------------
+const BOOKING_API = "https://germanclass-production.up.railway.app/bookings";
+const USER_API = "https://germanclass-production.up.railway.app/users";
+
+const [bookings,setBookings] = useState([]);
+const [loadingBookings,setLoadingBookings] = useState(true);
+
+const [users,setUsers] = useState([]);
+const [loadingUsers,setLoadingUsers] = useState(true);
+
+const [bookingSnackbar,setBookingSnackbar] = useState({open:false,message:"",severity:"success"});
+const [userSnackbar,setUserSnackbar] = useState({open:false,message:"",severity:"success"});
+
+const [deleteBookingDialog,setDeleteBookingDialog] = useState(false);
+const [selectedBookingId,setSelectedBookingId] = useState(null);
+
+const [userFormOpen,setUserFormOpen] = useState(false);
+const [userIsEditing,setUserIsEditing] = useState(false);
+
+const [uploadDialog,setUploadDialog] = useState(false);
+const [selectedUser,setSelectedUser] = useState(null);
+const [selectedFile,setSelectedFile] = useState(null);
+
+const [userFormData,setUserFormData] = useState({
+username:"",
+email:"",
+password:"",
+level:"A1"
+});
+
+useEffect(()=>{
+if(!currentUser || currentUser.email !== "jeswinjohnson54@gmail.com"){
+alert("Access denied");
+window.location.href="/";
+}
+},[currentUser]);
+
+// ---------------- FETCH BOOKINGS ----------------
+
+const fetchBookings = async ()=>{
+try{
+setLoadingBookings(true);
+const res = await fetch(BOOKING_API);
+const data = await res.json();
+setBookings(data.sort((a,b)=>new Date(a.date)-new Date(b.date)));
+}
+catch{
+setBookingSnackbar({open:true,message:"Error fetching bookings",severity:"error"});
+}
+finally{
+setLoadingBookings(false);
+}
+};
 
-  const openUserForm = (user=null)=>{
+// ---------------- FETCH USERS ----------------
 
-    if(user){
+const fetchUsers = async ()=>{
+try{
+setLoadingUsers(true);
+const res = await fetch(USER_API);
+const data = await res.json();
+setUsers(data);
+}
+catch{
+setUserSnackbar({open:true,message:"Error fetching users",severity:"error"});
+}
+finally{
+setLoadingUsers(false);
+}
+};
 
-      setUserIsEditing(true);
+useEffect(()=>{
+fetchBookings();
+fetchUsers();
+},[]);
 
-      setUserFormData({
-        _id:user._id,
-        username:user.username,
-        email:user.email,
-        level:user.level
-      });
+// ---------------- DELETE BOOKING ----------------
 
-    } else {
+const handleDeleteBooking = async ()=>{
+try{
 
-      setUserIsEditing(false);
+const res = await fetch(`${BOOKING_API}/${selectedBookingId}`,{
+method:"DELETE"
+});
 
-      setUserFormData({
-        username:"",
-        email:"",
-        password:"",
-        level:"A1"
-      });
+if(!res.ok) throw new Error();
 
-    }
+setBookingSnackbar({
+open:true,
+message:"Booking deleted",
+severity:"success"
+});
 
-    setUserFormOpen(true);
-  };
+fetchBookings();
 
-  // ---------------- SAVE USER ----------------
+}
+catch{
 
-  const handleUserSubmit = async ()=>{
+setBookingSnackbar({
+open:true,
+message:"Error deleting booking",
+severity:"error"
+});
 
-    try{
+}
 
-      const url = userIsEditing
-      ? `${USER_API}/${userFormData._id}`
-      : USER_API;
+setDeleteBookingDialog(false);
+};
 
-      const method = userIsEditing ? "PUT" : "POST";
+// ---------------- USER FORM ----------------
 
-      const res = await fetch(url,{
-        method,
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify(userFormData)
-      });
+const openUserForm = (user=null)=>{
 
-      if(!res.ok) throw new Error();
+if(user){
 
-      setUserSnackbar({
-        open:true,
-        message:userIsEditing?"User updated":"User added",
-        severity:"success"
-      });
+setUserIsEditing(true);
 
-      setUserFormOpen(false);
-      fetchUsers();
-    }
-    catch{
-      setUserSnackbar({
-        open:true,
-        message:"Error saving user",
-        severity:"error"
-      });
-    }
+setUserFormData({
+_id:user._id,
+username:user.username,
+email:user.email,
+level:user.level
+});
 
-  };
+} else {
 
-  // ---------------- DELETE USER ----------------
+setUserIsEditing(false);
 
-  const handleDeleteUser = async (id)=>{
+setUserFormData({
+username:"",
+email:"",
+password:"",
+level:"A1"
+});
 
-    if(!window.confirm("Delete this user?")) return;
+}
 
-    try{
+setUserFormOpen(true);
+};
 
-      const res = await fetch(`${USER_API}/${id}`,{
-        method:"DELETE"
-      });
+// ---------------- SAVE USER ----------------
 
-      if(!res.ok) throw new Error();
+const handleUserSubmit = async ()=>{
 
-      setUserSnackbar({
-        open:true,
-        message:"User deleted",
-        severity:"success"
-      });
+try{
 
-      fetchUsers();
-    }
-    catch{
+const url = userIsEditing
+? `${USER_API}/${userFormData._id}`
+: USER_API;
 
-      setUserSnackbar({
-        open:true,
-        message:"Error deleting user",
-        severity:"error"
-      });
+const method = userIsEditing ? "PUT" : "POST";
 
-    }
+const res = await fetch(url,{
+method,
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify(userFormData)
+});
 
-  };
+if(!res.ok) throw new Error();
 
-  return (
+setUserSnackbar({
+open:true,
+message:userIsEditing?"User updated":"User added",
+severity:"success"
+});
 
-  <Box sx={{maxWidth:1200,mx:"auto",mt:4,p:2}}>
+setUserFormOpen(false);
+fetchUsers();
 
-  {/* HEADER */}
+}
+catch{
 
-  <Stack direction="row" justifyContent="space-between" mb={4}>
+setUserSnackbar({
+open:true,
+message:"Error saving user",
+severity:"error"
+});
 
-  <img
-  src="/logo.png"
-  alt="logo"
-  style={{height:80}}
-  />
+}
 
-  <Button
-  variant="outlined"
-  color="error"
-  onClick={onLogout}
-  >
-  Logout
-  </Button>
+};
 
-  </Stack>
+// ---------------- DELETE USER ----------------
 
-  {/* BOOKINGS */}
+const handleDeleteUser = async (id)=>{
 
-  <Typography variant="h4" mb={2}>Bookings</Typography>
+if(!window.confirm("Delete this user?")) return;
 
-  {loadingBookings ?
+try{
 
-  <CircularProgress/>
+const res = await fetch(`${USER_API}/${id}`,{
+method:"DELETE"
+});
 
-  :
+if(!res.ok) throw new Error();
 
-  bookings.length===0 ?
+setUserSnackbar({
+open:true,
+message:"User deleted",
+severity:"success"
+});
 
-  <Alert severity="info">No bookings found</Alert>
+fetchUsers();
 
-  :
+}
+catch{
 
-  <TableContainer component={Paper}>
+setUserSnackbar({
+open:true,
+message:"Error deleting user",
+severity:"error"
+});
 
-  <Table>
+}
 
- <TableRow>
-  <TableCell>Username</TableCell>
-  <TableCell>Email</TableCell>
-  <TableCell>Level</TableCell>
-  <TableCell>Date</TableCell>
-  <TableCell>Time</TableCell>
-  <TableCell>Actions</TableCell>
-  </TableRow>
+};
 
+// ---------------- UPLOAD DOCUMENT ----------------
 
-  <TableBody>
+const openUploadDialog = (user)=>{
+setSelectedUser(user);
+setUploadDialog(true);
+};
 
-  {bookings.map(b=>(
-  <TableRow key={b._id}>
+const handleUploadDocument = async ()=>{
 
-  <TableCell>{b.username}</TableCell>
-  <TableCell>{b.email}</TableCell>
-  <TableCell>{b.level}</TableCell>
-  <TableCell>{new Date(b.date).toLocaleDateString()}</TableCell>
-  <TableCell>{b.time}</TableCell>
+try{
 
-  <TableCell>
+const formData = new FormData();
+formData.append("file",selectedFile);
+formData.append("userId",selectedUser._id);
 
-  <Button
-  color="error"
-  size="small"
-  onClick={()=>{
+await fetch(`${USER_API}/upload-doc`,{
+method:"POST",
+body:formData
+});
 
-  setSelectedBookingId(b._id);
-  setDeleteBookingDialog(true);
+setUploadDialog(false);
+setSelectedFile(null);
 
-  }}
-  >
-  Delete
-  </Button>
+setUserSnackbar({
+open:true,
+message:"Document uploaded",
+severity:"success"
+});
 
-  </TableCell>
+fetchUsers();
 
-  </TableRow>
-  ))}
+}
+catch{
 
-  </TableBody>
+setUserSnackbar({
+open:true,
+message:"Upload failed",
+severity:"error"
+});
 
-  </Table>
+}
 
-  </TableContainer>
+};
 
-  }
+return (
 
-  {/* DELETE BOOKING DIALOG */}
+<Box sx={{maxWidth:1200,mx:"auto",mt:4,p:2}}>
 
-  <Dialog
-  open={deleteBookingDialog}
-  onClose={()=>setDeleteBookingDialog(false)}
-  >
+{/* HEADER */}
 
-  <DialogTitle>Delete Booking</DialogTitle>
+<Stack direction="row" justifyContent="space-between" mb={4}>
 
-  <DialogContent>
-  <DialogContentText>
-  Are you sure you want to delete this booking?
-  </DialogContentText>
-  </DialogContent>
+<img src="/logo.png" alt="logo" style={{height:80}}/>
 
-  <DialogActions>
+<Button variant="outlined" color="error" onClick={onLogout}>
+Logout
+</Button>
 
-  <Button onClick={()=>setDeleteBookingDialog(false)}>
-  Cancel
-  </Button>
+</Stack>
 
-  <Button
-  color="error"
-  onClick={handleDeleteBooking}
-  >
-  Delete
-  </Button>
+{/* BOOKINGS */}
 
-  </DialogActions>
+<Typography variant="h4" mb={2}>Bookings</Typography>
 
-  </Dialog>
+{loadingBookings ?
 
-  {/* USERS */}
+<CircularProgress/>
 
-  <Box mt={6}>
+:
 
-  <Typography variant="h4" mb={2}>Users</Typography>
+bookings.length===0 ?
 
-  <Button
-  variant="contained"
-  sx={{mb:2}}
-  onClick={()=>openUserForm()}
-  >
-  Add User
-  </Button>
+<Alert severity="info">No bookings found</Alert>
 
-  {loadingUsers ?
+:
 
-  <CircularProgress/>
+<TableContainer component={Paper}>
 
-  :
+<Table>
 
-  <TableContainer component={Paper}>
+<TableHead>
+<TableRow>
+<TableCell>Username</TableCell>
+<TableCell>Email</TableCell>
+<TableCell>Level</TableCell>
+<TableCell>Date</TableCell>
+<TableCell>Time</TableCell>
+<TableCell>Actions</TableCell>
+</TableRow>
+</TableHead>
 
-  <Table>
+<TableBody>
 
-  <TableHead>
+{bookings.map(b=>(
 
-  <TableRow>
-  <TableCell>Usename</TableCell>
-  <TableCell>Email</TableCell>
-  <TableCell>Level</TableCell>
-  <TableCell>Action</TableCell>
-  </TableRow>
+<TableRow key={b._id}>
 
-  </TableHead>
+<TableCell>{b.username}</TableCell>
+<TableCell>{b.email}</TableCell>
+<TableCell>{b.level}</TableCell>
+<TableCell>{new Date(b.date).toLocaleDateString()}</TableCell>
+<TableCell>{b.time}</TableCell>
 
-  <TableBody>
+<TableCell>
 
-  {users.map(u=>(
-  <TableRow key={u._id}>
+<Button
+color="error"
+size="small"
+onClick={()=>{
+setSelectedBookingId(b._id);
+setDeleteBookingDialog(true);
+}}
+>
+Delete
+</Button>
+
+</TableCell>
+
+</TableRow>
+
+))}
+
+</TableBody>
+
+</Table>
+
+</TableContainer>
+
+}
+
+{/* USERS */}
+
+<Box mt={6}>
+
+<Typography variant="h4" mb={2}>Users</Typography>
+
+<Button variant="contained" sx={{mb:2}} onClick={()=>openUserForm()}>
+Add User
+</Button>
+
+{loadingUsers ?
+
+<CircularProgress/>
+
+:
+
+<TableContainer component={Paper}>
+
+<Table>
+
+<TableHead>
+
+<TableRow>
+<TableCell>Username</TableCell>
+<TableCell>Email</TableCell>
+<TableCell>Level</TableCell>
+<TableCell>Documents</TableCell>
+<TableCell>Action</TableCell>
+</TableRow>
+
+</TableHead>
+
+<TableBody>
+
+{users.map(u=>(
+
+<TableRow key={u._id}>
 
 <TableCell>{u.username}</TableCell>
 <TableCell>{u.email}</TableCell>
 <TableCell>{u.level}</TableCell>
-  <TableCell>
 
-  <Button
-  size="small"
-  onClick={()=>openUserForm(u)}
-  >
-  Edit
-  </Button>
+<TableCell>
 
-  <Button
-  size="small"
-  color="error"
-  onClick={()=>handleDeleteUser(u._id)}
-  >
-  Delete
-  </Button>
+{u.documents?.length>0 ?
 
-  </TableCell>
+u.documents.map((doc,i)=>(
+<div key={i}>
+<a href={doc.fileUrl} target="_blank">{doc.name}</a>
+</div>
+))
 
-  </TableRow>
-  ))}
+:
 
-  </TableBody>
+"No documents"
 
-  </Table>
+}
 
-  </TableContainer>
+</TableCell>
 
-  }
+<TableCell>
 
-  </Box>
+<Button size="small" onClick={()=>openUserForm(u)}>
+Edit
+</Button>
 
-  {/* USER FORM DIALOG */}
+<Button size="small" color="error" onClick={()=>handleDeleteUser(u._id)}>
+Delete
+</Button>
 
-  <Dialog
-  open={userFormOpen}
-  onClose={()=>setUserFormOpen(false)}
-  >
+<Button size="small" onClick={()=>openUploadDialog(u)}>
+Upload Doc
+</Button>
 
-  <DialogTitle>
-  {userIsEditing ? "Edit User" : "Add User"}
-  </DialogTitle>
+</TableCell>
 
-  <DialogContent>
+</TableRow>
 
-  <TextField
-  fullWidth
-  label="Username"
-  margin="dense"
-  value={userFormData.username}
-  onChange={e=>setUserFormData({...userFormData,username:e.target.value})}
-  />
+))}
 
-  <TextField
-  fullWidth
-  label="Email"
-  margin="dense"
-  value={userFormData.email}
-  onChange={e=>setUserFormData({...userFormData,email:e.target.value})}
-  />
+</TableBody>
 
-  {!userIsEditing &&
+</Table>
 
-  <TextField
-  fullWidth
-  label="Password"
-  type="password"
-  margin="dense"
-  value={userFormData.password}
-  onChange={e=>setUserFormData({...userFormData,password:e.target.value})}
-  />
+</TableContainer>
 
-  }
+}
 
-  <TextField
-  select
-  fullWidth
-  label="Level"
-  margin="dense"
-  value={userFormData.level}
-  onChange={e=>setUserFormData({...userFormData,level:e.target.value})}
-  >
+</Box>
 
-  {LEVELS.map(l=>(
-  <MenuItem key={l} value={l}>{l}</MenuItem>
-  ))}
+{/* USER FORM */}
 
-  </TextField>
+<Dialog open={userFormOpen} onClose={()=>setUserFormOpen(false)}>
 
-  </DialogContent>
+<DialogTitle>
+{userIsEditing ? "Edit User" : "Add User"}
+</DialogTitle>
 
-  <DialogActions>
+<DialogContent>
 
-  <Button onClick={()=>setUserFormOpen(false)}>
-  Cancel
-  </Button>
+<TextField
+fullWidth
+label="Username"
+margin="dense"
+value={userFormData.username}
+onChange={e=>setUserFormData({...userFormData,username:e.target.value})}
+/>
 
-  <Button
-  variant="contained"
-  onClick={handleUserSubmit}
-  >
-  {userIsEditing ? "Update" : "Create"}
-  </Button>
+<TextField
+fullWidth
+label="Email"
+margin="dense"
+value={userFormData.email}
+onChange={e=>setUserFormData({...userFormData,email:e.target.value})}
+/>
 
-  </DialogActions>
+{!userIsEditing &&
 
-  </Dialog>
+<TextField
+fullWidth
+label="Password"
+type="password"
+margin="dense"
+value={userFormData.password}
+onChange={e=>setUserFormData({...userFormData,password:e.target.value})}
+/>
 
-  {/* SNACKBARS */}
+}
 
-  <Snackbar
-  open={bookingSnackbar.open}
-  autoHideDuration={4000}
-  onClose={()=>setBookingSnackbar({...bookingSnackbar,open:false})}
-  >
-  <Alert severity={bookingSnackbar.severity}>
-  {bookingSnackbar.message}
-  </Alert>
-  </Snackbar>
+<TextField
+select
+fullWidth
+label="Level"
+margin="dense"
+value={userFormData.level}
+onChange={e=>setUserFormData({...userFormData,level:e.target.value})}
+>
 
-  <Snackbar
-  open={userSnackbar.open}
-  autoHideDuration={4000}
-  onClose={()=>setUserSnackbar({...userSnackbar,open:false})}
-  >
-  <Alert severity={userSnackbar.severity}>
-  {userSnackbar.message}
-  </Alert>
-  </Snackbar>
+{LEVELS.map(l=>(
+<MenuItem key={l} value={l}>{l}</MenuItem>
+))}
 
-  </Box>
+</TextField>
 
-  );
+</DialogContent>
+
+<DialogActions>
+
+<Button onClick={()=>setUserFormOpen(false)}>
+Cancel
+</Button>
+
+<Button variant="contained" onClick={handleUserSubmit}>
+{userIsEditing ? "Update" : "Create"}
+</Button>
+
+</DialogActions>
+
+</Dialog>
+
+{/* UPLOAD DOCUMENT */}
+
+<Dialog open={uploadDialog} onClose={()=>setUploadDialog(false)}>
+
+<DialogTitle>Upload Document</DialogTitle>
+
+<DialogContent>
+
+<input
+type="file"
+onChange={(e)=>setSelectedFile(e.target.files[0])}
+/>
+
+</DialogContent>
+
+<DialogActions>
+
+<Button onClick={()=>setUploadDialog(false)}>
+Cancel
+</Button>
+
+<Button variant="contained" onClick={handleUploadDocument}>
+Upload
+</Button>
+
+</DialogActions>
+
+</Dialog>
+
+{/* SNACKBARS */}
+
+<Snackbar
+open={bookingSnackbar.open}
+autoHideDuration={4000}
+onClose={()=>setBookingSnackbar({...bookingSnackbar,open:false})}
+>
+<Alert severity={bookingSnackbar.severity}>
+{bookingSnackbar.message}
+</Alert>
+</Snackbar>
+
+<Snackbar
+open={userSnackbar.open}
+autoHideDuration={4000}
+onClose={()=>setUserSnackbar({...userSnackbar,open:false})}
+>
+<Alert severity={userSnackbar.severity}>
+{userSnackbar.message}
+</Alert>
+</Snackbar>
+
+</Box>
+
+);
+
 }
