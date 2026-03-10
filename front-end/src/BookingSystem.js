@@ -800,18 +800,21 @@ return (
       {/* SNACKBAR */}
 
       <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={() => setSnackbarOpen(false)}
-        message={snackbarMessage}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        sx={{
-          "& .MuiSnackbarContent-root": {
-            backgroundColor: snackbarColor
-          }
-        }}
-        
-      />
+  open={snackbarOpen}
+  autoHideDuration={3000}
+  onClose={() => setSnackbarOpen(false)}
+  message={snackbarMessage}
+  anchorOrigin={{
+    vertical: "top",
+    horizontal: "right"
+  }}
+  sx={{
+    mt: isMobile ? 14 : 0,   // pushes toast down on mobile
+    "& .MuiSnackbarContent-root": {
+      backgroundColor: snackbarColor
+    }
+  }}
+/>
       
 
     </Box>
