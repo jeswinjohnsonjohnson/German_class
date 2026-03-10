@@ -548,13 +548,7 @@ return (
 {/* PAGINATION AT BOTTOM OF RIGHT PANEL */}
 
 {totalPages > 1 && (
-  <Stack
-    direction="row"
-    spacing={1}
-    justifyContent="center"
-    alignItems="center"
-    mt={2}
-  >
+  <Stack direction="row" spacing={1} justifyContent="center" mt={2}>
 
     <Button
       size="small"
@@ -564,16 +558,18 @@ return (
       Prev
     </Button>
 
-    {[...Array(totalPages)].map((_, i) => (
-      <Button
-        key={i}
-        size="small"
-        variant={page === i + 1 ? "contained" : "outlined"}
-        onClick={() => setPage(i + 1)}
-      >
-        {i + 1}
-      </Button>
-    ))}
+    {[page, page + 1]
+      .filter((p) => p <= totalPages)
+      .map((p) => (
+        <Button
+          key={p}
+          size="small"
+          variant={page === p ? "contained" : "outlined"}
+          onClick={() => setPage(p)}
+        >
+          {p}
+        </Button>
+      ))}
 
     <Button
       size="small"
