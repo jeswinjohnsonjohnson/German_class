@@ -5,45 +5,69 @@ const Mailgun = require("mailgun.js");
 const formData = require("form-data");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 
 const User = require("./models/User");
 const Booking = require("./models/Booking");
 
 require("dotenv").config();
-//
+
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use("/uploads", express.static("uploads"));
 
 
-// ---------------- MONGODB ----------------
+// ======================================================
+// CREATE UPLOAD FOLDER (IMPORTANT FOR RAILWAY)
+// ======================================================
+
+const uploadDir = path.join(__dirname, "uploads");
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+
+// ======================================================
+// SERVE STATIC FILES
+// ======================================================
+
+app.use("/uploads", express.static(uploadDir));
+
+
+// ======================================================
+// MONGODB
+// ======================================================
 
 mongoose.connect(process.env.MONGO_URI)
 .then(()=>console.log("MongoDB connected"))
 .catch(err=>console.error(err));
 
 
-// ---------------- MAILGUN ----------------
+// ======================================================
+// MAILGUN
+// ======================================================
 
 const mailgun = new Mailgun(formData);
 
 const mg = mailgun.client({
-username:"api",
-key:process.env.MAILGUN_API_KEY
+  username: "api",
+  key: process.env.MAILGUN_API_KEY
 });
 
 
-// ---------------- FILE UPLOAD ----------------
+// ======================================================
+// FILE UPLOAD
+// ======================================================
 
 const storage = multer.diskStorage({
-destination:(req,file,cb)=>{
-cb(null,"uploads/");
-},
-filename:(req,file,cb)=>{
-cb(null,Date.now()+path.extname(file.originalname));
-}
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
 });
 
 const upload = multer({ storage });
@@ -191,9 +215,17 @@ try{
 
 const {userId} = req.body;
 
+if(!req.file){
+return res.status(400).json({message:"No file uploaded"});
+}
+
 const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
 
 const user = await User.findById(userId);
+
+if(!user){
+return res.status(404).json({message:"User not found"});
+}
 
 user.documents.push({
 name:req.file.originalname,
