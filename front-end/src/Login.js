@@ -1,13 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TextField, Button, Typography, Box, Paper } from "@mui/material";
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Handles login on button click or Enter key press
+  const motivations = [
+    "🇩🇪 Jeder Tag ist eine neue Chance Deutsch zu lernen.",
+    "💪 Kleine Schritte führen zu großen Erfolgen.",
+    "📚 Übung macht den Meister.",
+    "🚀 Deutsch lernen öffnet Türen zu neuen Möglichkeiten.",
+    "🌍 Eine neue Sprache ist ein neues Leben."
+  ];
+
+  const [motivationIndex, setMotivationIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMotivationIndex((prev) => (prev + 1) % motivations.length);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleLogin = async (e) => {
-    if (e) e.preventDefault(); // Prevent page reload
+    if (e) e.preventDefault();
 
     if (!email || !password) {
       alert("Please enter email and password");
@@ -21,9 +38,9 @@ function Login({ onLogin }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: email.toLowerCase().trim(), // FIX: case insensitive email
-            password: password,
-          }),
+            email: email.toLowerCase().trim(),
+            password: password
+          })
         }
       );
 
@@ -49,26 +66,27 @@ function Login({ onLogin }) {
         alignItems: "center",
         height: "100vh",
         position: "relative",
-        backgroundColor: "#f5f5f5",
+        background: "linear-gradient(135deg, #1f1f1f 0%, #7a0f0f 50%, #d4af37 100%)"
       }}
     >
-      {/* Login Box */}
+      {/* Login Card */}
       <Paper
-        elevation={4}
+        elevation={6}
         sx={{
           p: 4,
-          width: 320,
+          width: 340,
           textAlign: "center",
           pt: 10,
           position: "relative",
-          borderRadius: 3,
+          borderRadius: 4,
+          backdropFilter: "blur(10px)",
+          background: "rgba(255,255,255,0.9)"
         }}
       >
-        <Typography variant="h5" mb={2}>
+        <Typography variant="h5" mb={2} fontWeight="bold">
           Login
         </Typography>
 
-        {/* Form handles Enter key automatically */}
         <form onSubmit={handleLogin}>
           <TextField
             label="Email"
@@ -76,7 +94,7 @@ function Login({ onLogin }) {
             margin="normal"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value.toLowerCase())} // keep lowercase
+            onChange={(e) => setEmail(e.target.value.toLowerCase())}
           />
 
           <TextField
@@ -96,6 +114,26 @@ function Login({ onLogin }) {
           >
             Login
           </Button>
+
+          {/* Motivational German Quote */}
+<Box
+  sx={{
+    mt: 3,
+    p: 1.5,
+    bgcolor: "#f0f7ff",
+    borderRadius: 2,
+    fontStyle: "italic",
+    height: "70px",          // fixed height prevents movement
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    textAlign: "center"
+  }}
+>
+  <Typography variant="body2">
+    {motivations[motivationIndex]}
+  </Typography>
+</Box>
         </form>
       </Paper>
 
@@ -105,9 +143,8 @@ function Login({ onLogin }) {
         alt="logo"
         style={{
           position: "absolute",
-          top: "calc(50% - 200px)",
-          width: 120,
-          height: "auto",
+          top: "calc(50% - 260px)",
+          width: 150
         }}
       />
     </Box>

@@ -341,17 +341,28 @@ const availableTimes = useMemo(() => {
     page * bookingsPerPage
   );
 
-  return (
+return (
 
-    <Box
-      sx={{
-        maxWidth: 1200,
-        mx: "auto",
-        px: { xs: 1.5, sm: 2, md: 3 },
-        py: { xs: 2, md: 3 }
-      }}
-    >
-
+<Box
+  sx={{
+    minHeight: "100vh",
+    background: "#5c0000", // full dark red
+    py: 4,
+    boxShadow: "inset 0 0 120px rgba(0,0,0,0.6)" // dark shadow effect
+  }}
+>
+  <Box
+    sx={{
+      maxWidth: 1200,
+      mx: "auto",
+      px: { xs: 1.5, sm: 2, md: 3 },
+      py: { xs: 2, md: 3 },
+      borderRadius: 3,
+      backdropFilter: "blur(8px)",
+      background: "rgba(255,255,255,0.95)",
+      boxShadow: "0 20px 50px rgba(0,0,0,0.4)"
+    }}
+  >
       {/* HEADER */}
 
       <Stack
@@ -454,16 +465,16 @@ const availableTimes = useMemo(() => {
 
         {/* BOOKINGS PANEL */}
 
-        <Paper
-          sx={{
-            width: { xs: "100%", md: 320 },
-            p: 3,
-            bgcolor: "#f9f9f9",
-            display: "flex",
-            flexDirection: "column",
-            height: { xs: "auto", md: 650 }
-          }}
-        >
+       <Paper
+  sx={{
+    width: { xs: "100%", md: 320 },
+    p: 3,
+    bgcolor: "#f9f9f9",
+    display: "flex",
+    flexDirection: "column",
+    height: { xs: "auto", md: 710 }
+  }}
+>
 
           <Typography variant="h6" mb={2} color="primary" fontWeight="bold">
             Your Bookings
@@ -514,7 +525,48 @@ const availableTimes = useMemo(() => {
 
                 </Stack>
 
-              </Box>
+</Box>
+
+{/* PAGINATION AT BOTTOM OF RIGHT PANEL */}
+
+{totalPages > 1 && (
+  <Stack
+    direction="row"
+    spacing={1}
+    justifyContent="center"
+    alignItems="center"
+    mt={2}
+  >
+
+    <Button
+      size="small"
+      disabled={page === 1}
+      onClick={() => setPage(page - 1)}
+    >
+      Prev
+    </Button>
+
+    {[...Array(totalPages)].map((_, i) => (
+      <Button
+        key={i}
+        size="small"
+        variant={page === i + 1 ? "contained" : "outlined"}
+        onClick={() => setPage(i + 1)}
+      >
+        {i + 1}
+      </Button>
+    ))}
+
+    <Button
+      size="small"
+      disabled={page === totalPages}
+      onClick={() => setPage(page + 1)}
+    >
+      Next
+    </Button>
+
+  </Stack>
+)}
 
             </>
 
@@ -525,6 +577,7 @@ const availableTimes = useMemo(() => {
         </Paper>
 
       </Box>
+      
 
       {/* BOOKING DIALOG */}
 
@@ -700,12 +753,16 @@ const availableTimes = useMemo(() => {
             backgroundColor: snackbarColor
           }
         }}
+        
       />
+      
 
     </Box>
 
+</Box>
   );
 
 }
+
 
 export default BookingSystem;
