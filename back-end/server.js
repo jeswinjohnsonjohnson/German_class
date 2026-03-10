@@ -40,11 +40,12 @@ app.post("/users/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    res.json({
-      id: user._id,
-      email: user.email,
-      level: user.level,
-    });
+  res.json({
+  id: user._id,
+  username: user.username,
+  email: user.email,
+  level: user.level,
+});
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Login error" });
@@ -137,10 +138,9 @@ app.get("/bookings", async (req, res) => {
   }
 });
 
-// Create booking
 app.post("/bookings", async (req, res) => {
   try {
-    const { username, email, level, date, time } = req.body;
+    const { email, level, date, time } = req.body;
 
     if (!email || !level || !date || !time) {
       return res.status(400).json({ message: "Email, level, date, and time required" });
@@ -151,12 +151,15 @@ app.post("/bookings", async (req, res) => {
       return res.status(400).json({ message: "Slot already booked" });
     }
 
+    // Get username from Users collection
+    const user = await User.findOne({ email });
+
     const booking = new Booking({
-      username: username || email.split("@")[0],
+      username: user ? user.username : email.split("@")[0],
       email,
       level,
       date,
-      time,
+      time
     });
 
     await booking.save();
@@ -169,6 +172,7 @@ app.post("/bookings", async (req, res) => {
     });
 
     res.status(201).json(booking);
+
   } catch (err) {
     console.error("Booking error:", err);
     res.status(500).json({

@@ -30,6 +30,8 @@ function BookingSystem({ currentUser, onLogout }) {
       ? currentUser.email
       : currentUser;
 
+  const username = currentUser?.username || userEmail?.split("@")[0];
+
   const [selectedDate, setSelectedDate] = useState(null);
   const [level, setLevel] = useState("");
   const [time, setTime] = useState("");
@@ -84,7 +86,7 @@ function BookingSystem({ currentUser, onLogout }) {
 
       const cleaned = data.map((b) => ({
         _id: b._id,
-        username: typeof b.username === "string" ? b.username : b.email,
+        username: b.username || b.email?.split("@")[0],
         email: b.email,
         level: b.level,
         date: b.date,
@@ -105,7 +107,7 @@ function BookingSystem({ currentUser, onLogout }) {
             display: "block",
             color: isPast
               ? "#b0b0b0"
-              : b.username === userEmail
+              : b.email === userEmail
               ? "#4caf50"
               : "#ff4d4d"
           };
@@ -114,18 +116,18 @@ function BookingSystem({ currentUser, onLogout }) {
       );
 
     } catch (err) {
-
       console.error(err);
-
     }
 
   };
 
   useEffect(() => {
-
     fetchBookings();
-
   }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [bookedSlots]);
 
   const availableTimes = useMemo(() => {
 
@@ -183,7 +185,7 @@ function BookingSystem({ currentUser, onLogout }) {
 
     const weeklyCount = bookedSlots.filter(
       (b) =>
-        b.username === userEmail &&
+        b.email === userEmail &&
         b.date >= startStr &&
         b.date <= endStr
     ).length;
@@ -209,19 +211,19 @@ function BookingSystem({ currentUser, onLogout }) {
     if (!level || !time) return;
 
     const booking = {
-      username: userEmail,
+      email: userEmail,
       level,
       date: selectedDate,
-      time,
-      email: userEmail
+      time
     };
 
-    setSnackbarColor("#4caf50");
-    setSnackbarMessage(`Booking saved for ${selectedDate} at ${time} (${level})`);
-    setSnackbarOpen(true);
-    setOpenDialog(false);
-
-    setBookedSlots((prev) => [...prev, booking]);
+    setBookedSlots((prev) => [
+      ...prev,
+      {
+        ...booking,
+        _id: Math.random().toString()
+      }
+    ]);
 
     setCalendarEvents((prev) => [
       ...prev,
@@ -233,33 +235,76 @@ function BookingSystem({ currentUser, onLogout }) {
       }
     ]);
 
-    fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(booking)
-    });
+    setSnackbarColor("#4caf50");
+    setSnackbarMessage(`Booking saved for ${selectedDate} at ${time} (${level})`);
+    setSnackbarOpen(true);
+
+    setOpenDialog(false);
+
+    try {
+
+      await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(booking)
+      });
+
+      fetchBookings();
+
+    } catch (err) {
+      console.error(err);
+    }
 
   };
 
   const cancelBooking = async (id) => {
 
+    const bookingToDelete = bookedSlots.find((b) => b._id === id);
+
+    const updatedBookings = bookedSlots.filter((b) => b._id !== id);
+
+    setBookedSlots(updatedBookings);
+
+    const userUpdatedBookings = updatedBookings.filter(
+      (b) => b.email === userEmail
+    );
+
+    const newTotalPages = Math.ceil(userUpdatedBookings.length / bookingsPerPage);
+
+    if (page > newTotalPages && newTotalPages > 0) {
+      setPage(newTotalPages);
+    }
+
+    setCalendarEvents((prev) =>
+      prev.filter(
+        (e) =>
+          e.start !== `${bookingToDelete.date}T${bookingToDelete.time}:00`
+      )
+    );
+
+    setSnackbarMessage("Booking deleted successfully");
+    setSnackbarColor("#d32f2f");
+    setSnackbarOpen(true);
+
     try {
 
-      await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-      fetchBookings();
+      await fetch(`${API_URL}/${id}`, {
+        method: "DELETE"
+      });
 
     } catch (err) {
 
       console.error(err);
+      fetchBookings();
 
     }
 
   };
 
   const userBookings = bookedSlots.filter(
-    (b) => b.username === userEmail
+    (b) => b.email === userEmail
   );
 
   const totalPages = Math.ceil(userBookings.length / bookingsPerPage);
@@ -273,53 +318,27 @@ function BookingSystem({ currentUser, onLogout }) {
 
     <Box sx={{ maxWidth: 1200, mx: "auto", p: { xs: 2, md: 3 } }}>
 
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        justifyContent="space-between"
-        alignItems={{ xs: "flex-start", sm: "center" }}
-        spacing={2}
-        mb={3}
-      >
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
 
         <Stack direction="row" alignItems="center" spacing={2}>
 
-          <Box
-            component="img"
-            src="/logo.png"
-            alt="logo"
-            sx={{
-              height: { xs: 70, sm: 120 },
-              width: "auto"
-            }}
-          />
+          <Box component="img" src="/logo.png" alt="logo" sx={{ height: { xs: 70, sm: 120 } }} />
 
-          <Typography variant="h6" color="primary">
-            Logged in as: {userEmail}
+          <Typography variant="h6" color="primary" fontWeight="bold">
+            Welcome, {username} 👋
           </Typography>
 
         </Stack>
 
-        <Button variant="outlined" color="error" onClick={onLogout}>
+        <Button variant="outlined" color="error" size="small" onClick={onLogout}>
           Logout
         </Button>
 
       </Stack>
 
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          gap: 3
-        }}
-      >
+      <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3 }}>
 
-        <Paper
-          sx={{
-            flex: 2,
-            p: { xs: 1, sm: 2 },
-            minHeight: { xs: 400, md: 600 }
-          }}
-        >
+        <Paper sx={{ flex: 2, p: 2 }}>
 
           <FullCalendar
             plugins={[dayGridPlugin, interactionPlugin]}
@@ -339,16 +358,7 @@ function BookingSystem({ currentUser, onLogout }) {
 
         </Paper>
 
-        <Paper
-          sx={{
-            width: { xs: "100%", md: 320 },
-            p: { xs: 2, md: 3 },
-            bgcolor: "#f9f9f9",
-            display: "flex",
-            flexDirection: "column",
-            height: { xs: "auto", md: 650 }
-          }}
-        >
+        <Paper sx={{ width: { xs: "100%", md: 320 }, p: 3, bgcolor: "#f9f9f9", display: "flex", flexDirection: "column", height: { xs: "auto", md: 650 } }}>
 
           <Typography variant="h6" mb={2} color="primary" fontWeight="bold">
             Your Bookings
@@ -477,9 +487,7 @@ function BookingSystem({ currentUser, onLogout }) {
 
         <DialogActions>
 
-          <Button onClick={() => setOpenDialog(false)}>
-            Close
-          </Button>
+          <Button onClick={() => setOpenDialog(false)}>Close</Button>
 
           <Button onClick={sendBooking} disabled={!level || !time}>
             Book

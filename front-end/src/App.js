@@ -11,7 +11,7 @@ function App() {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/users")
+    fetch("https://germanclass-production.up.railway.app/users")
       .then(res => res.json())
       .then(data => setUsers(data))
       .catch(err => console.error(err));
