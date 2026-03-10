@@ -8,17 +8,31 @@ function Login({ onLogin }) {
   // Handles login on button click or Enter key press
   const handleLogin = async (e) => {
     if (e) e.preventDefault(); // Prevent page reload
-    if (!email || !password) return alert("Please enter email and password");
+
+    if (!email || !password) {
+      alert("Please enter email and password");
+      return;
+    }
 
     try {
-      const res = await fetch("https://germanclass-production.up.railway.app/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-//
+      const res = await fetch(
+        "https://germanclass-production.up.railway.app/users/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email.toLowerCase().trim(), // FIX: case insensitive email
+            password: password,
+          }),
+        }
+      );
+
       const data = await res.json();
-      if (!res.ok) return alert(data.message || "Login failed");
+
+      if (!res.ok) {
+        alert(data.message || "Login failed");
+        return;
+      }
 
       onLogin(data);
     } catch (err) {
@@ -35,11 +49,24 @@ function Login({ onLogin }) {
         alignItems: "center",
         height: "100vh",
         position: "relative",
+        backgroundColor: "#f5f5f5",
       }}
     >
       {/* Login Box */}
-      <Paper sx={{ p: 4, width: 300, textAlign: "center", pt: 10, position: "relative" }}>
-        <Typography variant="h5" mb={2}>Login</Typography>
+      <Paper
+        elevation={4}
+        sx={{
+          p: 4,
+          width: 320,
+          textAlign: "center",
+          pt: 10,
+          position: "relative",
+          borderRadius: 3,
+        }}
+      >
+        <Typography variant="h5" mb={2}>
+          Login
+        </Typography>
 
         {/* Form handles Enter key automatically */}
         <form onSubmit={handleLogin}>
@@ -49,8 +76,9 @@ function Login({ onLogin }) {
             margin="normal"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value.toLowerCase())} // keep lowercase
           />
+
           <TextField
             label="Password"
             fullWidth
@@ -59,7 +87,13 @@ function Login({ onLogin }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <Button type="submit" fullWidth variant="contained" sx={{ mt: 2 }}>
+
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 2 }}
+          >
             Login
           </Button>
         </form>
@@ -71,7 +105,7 @@ function Login({ onLogin }) {
         alt="logo"
         style={{
           position: "absolute",
-          top: "calc(50% - 200px)", // adjust vertical position
+          top: "calc(50% - 200px)",
           width: 120,
           height: "auto",
         }}

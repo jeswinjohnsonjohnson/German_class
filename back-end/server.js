@@ -85,7 +85,10 @@ try{
 
 const {email,password} = req.body;
 
-const user = await User.findOne({email});
+// convert email to lowercase
+const emailLower = email.toLowerCase().trim();
+
+const user = await User.findOne({ email: emailLower });
 
 if(!user || user.password !== password){
 return res.status(400).json({message:"Invalid login"});
@@ -137,7 +140,7 @@ const {username,email,password,level} = req.body;
 
 const user = new User({
 username,
-email,
+email: email.toLowerCase().trim(),
 password,
 level,
 documents:[]
@@ -168,7 +171,12 @@ const {username,email,password,level} = req.body;
 const updated = await User.findByIdAndUpdate(
 
 req.params.id,
-{username,email,password,level},
+{
+username,
+email: email.toLowerCase().trim(),
+password,
+level
+},
 {new:true}
 
 );
@@ -299,7 +307,9 @@ try{
 
 const {email,level,date,time} = req.body;
 
-const user = await User.findOne({email});
+const user = await User.findOne({
+email: email.toLowerCase().trim()
+});
 
 const booking = new Booking({
 
