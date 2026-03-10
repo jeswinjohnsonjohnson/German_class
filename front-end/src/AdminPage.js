@@ -105,6 +105,7 @@ fetchUsers();
 // ---------------- DELETE BOOKING ----------------
 
 const handleDeleteBooking = async ()=>{
+
 try{
 
 const res = await fetch(`${BOOKING_API}/${selectedBookingId}`,{
@@ -113,16 +114,15 @@ method:"DELETE"
 
 if(!res.ok) throw new Error();
 
+setBookings(prev => prev.filter(b => b._id !== selectedBookingId));
+
 setBookingSnackbar({
 open:true,
 message:"Booking deleted",
 severity:"success"
 });
 
-fetchBookings();
-
-}
-catch{
+}catch{
 
 setBookingSnackbar({
 open:true,
@@ -133,6 +133,7 @@ severity:"error"
 }
 
 setDeleteBookingDialog(false);
+
 };
 
 // ---------------- USER FORM ----------------
@@ -150,7 +151,7 @@ email:user.email,
 level:user.level
 });
 
-} else {
+}else{
 
 setUserIsEditing(false);
 
@@ -195,8 +196,7 @@ severity:"success"
 setUserFormOpen(false);
 fetchUsers();
 
-}
-catch{
+}catch{
 
 setUserSnackbar({
 open:true,
@@ -230,8 +230,7 @@ severity:"success"
 
 fetchUsers();
 
-}
-catch{
+}catch{
 
 setUserSnackbar({
 open:true,
@@ -274,8 +273,7 @@ severity:"success"
 
 fetchUsers();
 
-}
-catch{
+}catch{
 
 setUserSnackbar({
 open:true,
@@ -372,6 +370,34 @@ Delete
 </TableContainer>
 
 }
+
+{/* DELETE BOOKING DIALOG */}
+
+<Dialog open={deleteBookingDialog} onClose={()=>setDeleteBookingDialog(false)}>
+
+<DialogTitle>Delete Booking</DialogTitle>
+
+<DialogContent>
+
+<DialogContentText>
+Are you sure you want to delete this booking?
+</DialogContentText>
+
+</DialogContent>
+
+<DialogActions>
+
+<Button onClick={()=>setDeleteBookingDialog(false)}>
+Cancel
+</Button>
+
+<Button color="error" variant="contained" onClick={handleDeleteBooking}>
+Delete
+</Button>
+
+</DialogActions>
+
+</Dialog>
 
 {/* USERS */}
 
@@ -541,10 +567,7 @@ Cancel
 
 <DialogContent>
 
-<input
-type="file"
-onChange={(e)=>setSelectedFile(e.target.files[0])}
-/>
+<input type="file" onChange={(e)=>setSelectedFile(e.target.files[0])} />
 
 </DialogContent>
 
