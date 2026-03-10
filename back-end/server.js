@@ -5,6 +5,8 @@ const Mailgun = require("mailgun.js");
 const formData = require("form-data");
 const User = require("./models/User");
 const Booking = require("./models/Booking");
+const Document = require("./models/Document");
+
 require("dotenv").config();
 
 const app = express();
@@ -214,6 +216,63 @@ app.delete("/bookings/:id", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Error deleting booking" });
+  }
+});
+
+// -------- DOCUMENTS -------- //
+
+// Get all documents
+app.get("/documents", async (req, res) => {
+  try {
+    const docs = await Document.find();
+    res.json(docs);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching documents" });
+  }
+});
+
+// Add document
+app.post("/documents", async (req, res) => {
+  try {
+
+    const { name, url, level } = req.body;
+
+    if (!name || !url || !level) {
+      return res.status(400).json({ message: "Name, URL and level required" });
+    }
+
+    const doc = new Document({
+      name,
+      url,
+      level
+    });
+
+    await doc.save();
+
+    res.status(201).json(doc);
+
+  } catch (err) {
+
+    console.error(err);
+    res.status(500).json({ message: "Error creating document" });
+
+  }
+});
+
+// Delete document
+app.delete("/documents/:id", async (req, res) => {
+  try {
+
+    await Document.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "Document deleted" });
+
+  } catch (err) {
+
+    console.error(err);
+    res.status(500).json({ message: "Error deleting document" });
+
   }
 });
 
