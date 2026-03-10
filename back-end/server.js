@@ -10,7 +10,7 @@ const User = require("./models/User");
 const Booking = require("./models/Booking");
 
 require("dotenv").config();
-
+//
 const app = express();
 
 app.use(cors());
