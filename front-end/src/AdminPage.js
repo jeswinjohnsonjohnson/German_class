@@ -102,6 +102,40 @@ fetchBookings();
 fetchUsers();
 },[]);
 
+// ---------------- DELETE DOCUMENT ----------------
+
+const handleDeleteDocument = async (userId, docId) => {
+
+  if (!window.confirm("Delete this document?")) return;
+
+  try {
+
+    const res = await fetch(`${USER_API}/${userId}/documents/${docId}`, {
+      method: "DELETE"
+    });
+
+    if (!res.ok) throw new Error();
+
+    setUserSnackbar({
+      open: true,
+      message: "Document deleted",
+      severity: "success"
+    });
+
+    fetchUsers();
+
+  } catch {
+
+    setUserSnackbar({
+      open: true,
+      message: "Error deleting document",
+      severity: "error"
+    });
+
+  }
+
+};
+
 // ---------------- DELETE BOOKING ----------------
 
 const handleDeleteBooking = async ()=>{
@@ -443,12 +477,11 @@ Add User
 <TableCell>{u.password}</TableCell>
 <TableCell>{u.level}</TableCell>
 <TableCell>
-
 {u.documents?.length > 0 ?
 
 u.documents.map((doc) => (
 
-  <div key={doc._id} style={{ marginBottom: 4 }}>
+  <div key={doc._id}>
 
     <a href={doc.fileUrl} target="_blank" rel="noreferrer">
       {doc.name}
