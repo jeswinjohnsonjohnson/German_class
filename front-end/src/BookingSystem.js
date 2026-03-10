@@ -3,9 +3,10 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { Description, Download } from "@mui/icons-material";
+import { Menu, MenuItem } from "@mui/material"; 
+import { VideoCall } from "@mui/icons-material";
 import {
   TextField,
-  MenuItem,
   Button,
   Typography,
   Paper,
@@ -45,7 +46,7 @@ function BookingSystem({ currentUser, onLogout }) {
 
   const [documents, setDocuments] = useState([]);
   const [openDocs, setOpenDocs] = useState(false);
-
+const [meetAnchor, setMeetAnchor] = useState(null);
   const [page, setPage] = useState(1);
   const bookingsPerPage = 3;
 
@@ -58,7 +59,12 @@ function BookingSystem({ currentUser, onLogout }) {
     "17:30",
     "19:30"
   ];
-
+const meetLinks = {
+  A1: "https://meet.google.com/akj-wzxd-ejn",
+  A2: "https://meet.google.com/akj-wzxd-ejn",
+  B1: "https://meet.google.com/hcz-dwbe-dgn",
+  B2: "https://meet.google.com/hcz-dwbe-dgn"
+};
   useEffect(() => {
     fetch("https://germanclass-production.up.railway.app/documents")
       .then(res => res.json())
@@ -149,44 +155,48 @@ function BookingSystem({ currentUser, onLogout }) {
 
   }, [bookedSlots]);
 
-  const availableTimes = useMemo(() => {
+const availableTimes = useMemo(() => {
 
-    if (!selectedDate) return [];
+  if (!selectedDate || !level) return [];
 
-    const now = new Date();
-    const todayStr = now.toISOString().split("T")[0];
+  const now = new Date();
+  const todayStr = now.toISOString().split("T")[0];
 
-    if (selectedDate < todayStr) return [];
+  if (selectedDate < todayStr) return [];
 
-    return timeSlots.filter((t) => {
+  return timeSlots.filter((t) => {
 
-      const booked = bookedSlots.some(
-        (b) => b.date === selectedDate && b.time === t
+    // check if slot already booked by another level
+    const bookedByOtherLevel = bookedSlots.some(
+      (b) =>
+        b.date === selectedDate &&
+        b.time === t &&
+        b.level !== level
+    );
+
+    if (bookedByOtherLevel) return false;
+
+    // remove past time today
+    if (selectedDate === todayStr) {
+
+      const [hours, minutes] = t.split(":").map(Number);
+
+      const slotTime = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        hours,
+        minutes
       );
 
-      if (booked) return false;
+      if (slotTime <= now) return false;
+    }
 
-      if (selectedDate === todayStr) {
+    return true;
 
-        const [hours, minutes] = t.split(":").map(Number);
+  });
 
-        const slotTime = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate(),
-          hours,
-          minutes
-        );
-
-        if (slotTime <= now) return false;
-
-      }
-
-      return true;
-
-    });
-
-  }, [selectedDate, bookedSlots]);
+}, [selectedDate, level, bookedSlots]);
 
   const handleDateClick = (info) => {
 
@@ -375,7 +385,13 @@ function BookingSystem({ currentUser, onLogout }) {
           flexWrap="wrap"
           justifyContent={{ xs: "flex-start", sm: "flex-end" }}
         >
-
+<Button
+  variant="outlined"
+  startIcon={<VideoCall />}
+  onClick={(e) => setMeetAnchor(e.currentTarget)}
+>
+  Meet
+</Button>
           <Button
             variant="outlined"
             startIcon={<Description />}
@@ -627,7 +643,50 @@ function BookingSystem({ currentUser, onLogout }) {
         </DialogActions>
 
       </Dialog>
+{/* GOOGLE MEET MENU */}
 
+<Menu
+  anchorEl={meetAnchor}
+  open={Boolean(meetAnchor)}
+  onClose={() => setMeetAnchor(null)}
+>
+
+  {Object.entries(meetLinks).map(([level, link]) => (
+
+    <MenuItem
+      key={level}
+      onClick={() => {
+        window.open(link, "_blank");
+        setMeetAnchor(null);
+      }}
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1.5,
+        py: 1.2
+      }}
+    >
+
+      <VideoCall color="primary" />
+
+      <Box>
+        <Typography fontWeight="bold">
+          {level} Class
+        </Typography>
+
+        <Typography
+          variant="caption"
+          color="text.secondary"
+        >
+          Join Google Meet
+        </Typography>
+      </Box>
+
+    </MenuItem>
+
+  ))}
+
+</Menu>
       {/* SNACKBAR */}
 
       <Snackbar
