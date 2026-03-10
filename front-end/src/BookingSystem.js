@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
+
 import {
   TextField,
   MenuItem,
@@ -17,6 +18,7 @@ import {
   Stack,
   Chip
 } from "@mui/material";
+
 import { CalendarToday, AccessTime, Star } from "@mui/icons-material";
 
 function BookingSystem({ currentUser, onLogout }) {
@@ -39,6 +41,9 @@ function BookingSystem({ currentUser, onLogout }) {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarColor, setSnackbarColor] = useState("#4caf50");
 
+  const [page, setPage] = useState(1);
+  const bookingsPerPage = 3;
+
   const timeSlots = [
     "07:30",
     "09:30",
@@ -50,9 +55,9 @@ function BookingSystem({ currentUser, onLogout }) {
   ];
 
   const getWeekStartEndStr = (dateStr) => {
+
     const date = new Date(dateStr);
     const day = date.getDay();
-
     const diffToMonday = day === 0 ? -6 : 1 - day;
 
     const monday = new Date(date);
@@ -67,10 +72,13 @@ function BookingSystem({ currentUser, onLogout }) {
       startStr: toYMD(monday),
       endStr: toYMD(sunday)
     };
+
   };
 
   const fetchBookings = async () => {
+
     try {
+
       const res = await fetch(API_URL);
       const data = await res.json();
 
@@ -87,6 +95,7 @@ function BookingSystem({ currentUser, onLogout }) {
 
       setCalendarEvents(
         cleaned.map((b) => {
+
           const eventDate = new Date(`${b.date}T${b.time}`);
           const isPast = eventDate <= new Date();
 
@@ -100,18 +109,26 @@ function BookingSystem({ currentUser, onLogout }) {
               ? "#4caf50"
               : "#ff4d4d"
           };
+
         })
       );
+
     } catch (err) {
+
       console.error(err);
+
     }
+
   };
 
   useEffect(() => {
+
     fetchBookings();
+
   }, []);
 
   const availableTimes = useMemo(() => {
+
     if (!selectedDate) return [];
 
     const now = new Date();
@@ -120,6 +137,7 @@ function BookingSystem({ currentUser, onLogout }) {
     if (selectedDate < todayStr) return [];
 
     return timeSlots.filter((t) => {
+
       const booked = bookedSlots.some(
         (b) => b.date === selectedDate && b.time === t
       );
@@ -127,6 +145,7 @@ function BookingSystem({ currentUser, onLogout }) {
       if (booked) return false;
 
       if (selectedDate === todayStr) {
+
         const [hours, minutes] = t.split(":").map(Number);
 
         const slotTime = new Date(
@@ -138,13 +157,17 @@ function BookingSystem({ currentUser, onLogout }) {
         );
 
         if (slotTime <= now) return false;
+
       }
 
       return true;
+
     });
+
   }, [selectedDate, bookedSlots]);
 
   const handleDateClick = (info) => {
+
     const now = new Date();
     const selected = new Date(info.dateStr + "T00:00");
 
@@ -166,39 +189,23 @@ function BookingSystem({ currentUser, onLogout }) {
     ).length;
 
     if (weeklyCount >= 3) {
+
       setSnackbarMessage("You cannot book more than 3 slots per week.");
       setSnackbarColor("#d4c85f");
       setSnackbarOpen(true);
       return;
+
     }
-
-    const futureTimes = timeSlots.filter((t) => {
-      const [hours, minutes] = t.split(":").map(Number);
-
-      const slotTime = new Date(
-        selected.getFullYear(),
-        selected.getMonth(),
-        selected.getDate(),
-        hours,
-        minutes
-      );
-
-      const booked = bookedSlots.some(
-        (b) => b.date === info.dateStr && b.time === t
-      );
-
-      return slotTime > now && !booked;
-    });
-
-    if (futureTimes.length === 0) return;
 
     setSelectedDate(info.dateStr);
     setLevel("");
     setTime("");
     setOpenDialog(true);
+
   };
 
   const sendBooking = async () => {
+
     if (!level || !time) return;
 
     const booking = {
@@ -210,13 +217,8 @@ function BookingSystem({ currentUser, onLogout }) {
     };
 
     setSnackbarColor("#4caf50");
-
-    setSnackbarMessage(
-      `Booking saved for ${selectedDate} at ${time} (${level})`
-    );
-
+    setSnackbarMessage(`Booking saved for ${selectedDate} at ${time} (${level})`);
     setSnackbarOpen(true);
-
     setOpenDialog(false);
 
     setBookedSlots((prev) => [...prev, booking]);
@@ -238,43 +240,61 @@ function BookingSystem({ currentUser, onLogout }) {
       },
       body: JSON.stringify(booking)
     });
+
   };
 
   const cancelBooking = async (id) => {
+
     try {
+
       await fetch(`${API_URL}/${id}`, { method: "DELETE" });
       fetchBookings();
+
     } catch (err) {
+
       console.error(err);
+
     }
+
   };
 
   const userBookings = bookedSlots.filter(
     (b) => b.username === userEmail
   );
 
-  return (
-    <Box sx={{ maxWidth: 1200, mx: "auto", p: 3 }}>
+  const totalPages = Math.ceil(userBookings.length / bookingsPerPage);
 
-      {/* HEADER WITH LOGO */}
+  const paginatedBookings = userBookings.slice(
+    (page - 1) * bookingsPerPage,
+    page * bookingsPerPage
+  );
+
+  return (
+
+    <Box sx={{ maxWidth: 1200, mx: "auto", p: { xs: 2, md: 3 } }}>
 
       <Stack
-        direction="row"
+        direction={{ xs: "column", sm: "row" }}
         justifyContent="space-between"
-        alignItems="center"
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        spacing={2}
         mb={3}
       >
 
         <Stack direction="row" alignItems="center" spacing={2}>
 
-          <img
+          <Box
+            component="img"
             src="/logo.png"
             alt="logo"
-            style={{ height: 150, width: "auto" }}
+            sx={{
+              height: { xs: 70, sm: 120 },
+              width: "auto"
+            }}
           />
 
           <Typography variant="h6" color="primary">
-            Logged in as: {userEmail || "Guest"}
+            Logged in as: {userEmail}
           </Typography>
 
         </Stack>
@@ -285,18 +305,28 @@ function BookingSystem({ currentUser, onLogout }) {
 
       </Stack>
 
-      <Box sx={{ display: "flex", gap: 4 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          gap: 3
+        }}
+      >
 
-        {/* CALENDAR */}
-
-        <Paper sx={{ flex: 1, p: 2 }}>
+        <Paper
+          sx={{
+            flex: 2,
+            p: { xs: 1, sm: 2 },
+            minHeight: { xs: 400, md: 600 }
+          }}
+        >
 
           <FullCalendar
             plugins={[dayGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
             dateClick={handleDateClick}
             events={calendarEvents}
-            height={600}
+            height="auto"
             headerToolbar={{
               left: "prev,next today",
               center: "title",
@@ -309,72 +339,107 @@ function BookingSystem({ currentUser, onLogout }) {
 
         </Paper>
 
-        {/* USER BOOKINGS */}
+        <Paper
+          sx={{
+            width: { xs: "100%", md: 320 },
+            p: { xs: 2, md: 3 },
+            bgcolor: "#f9f9f9",
+            display: "flex",
+            flexDirection: "column",
+            height: { xs: "auto", md: 650 }
+          }}
+        >
 
-        <Paper sx={{ width: 320, p: 3, bgcolor: "#f9f9f9" }}>
-
-          <Typography
-            variant="h6"
-            mb={2}
-            color="primary"
-            fontWeight="bold"
-          >
+          <Typography variant="h6" mb={2} color="primary" fontWeight="bold">
             Your Bookings
           </Typography>
 
           {userBookings.length > 0 ? (
 
-            <Stack spacing={2}>
+            <>
+              <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
 
-              {userBookings.map((b) => (
+                <Stack spacing={2}>
 
-                <Paper key={b._id} sx={{ p: 2 }}>
+                  {paginatedBookings.map((b) => (
 
-                  <Stack spacing={1}>
+                    <Paper key={b._id} sx={{ p: 2 }}>
 
-                    <Stack direction="row" spacing={1}>
-                      <CalendarToday fontSize="small" />
-                      <Typography variant="body2">{b.date}</Typography>
-                    </Stack>
+                      <Stack spacing={1}>
 
-                    <Stack direction="row" spacing={1}>
-                      <AccessTime fontSize="small" />
-                      <Typography variant="body2">{b.time}</Typography>
-                    </Stack>
+                        <Stack direction="row" spacing={1}>
+                          <CalendarToday fontSize="small" />
+                          <Typography variant="body2">{b.date}</Typography>
+                        </Stack>
 
-                    <Stack direction="row" spacing={1}>
-                      <Star fontSize="small" />
-                      <Chip label={b.level} size="small" color="success" />
-                    </Stack>
+                        <Stack direction="row" spacing={1}>
+                          <AccessTime fontSize="small" />
+                          <Typography variant="body2">{b.time}</Typography>
+                        </Stack>
 
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      size="small"
-                      onClick={() => cancelBooking(b._id)}
-                    >
-                      Cancel
-                    </Button>
+                        <Stack direction="row" spacing={1}>
+                          <Star fontSize="small" />
+                          <Chip label={b.level} size="small" color="success" />
+                        </Stack>
 
-                  </Stack>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          size="small"
+                          onClick={() => cancelBooking(b._id)}
+                        >
+                          Cancel
+                        </Button>
 
-                </Paper>
+                      </Stack>
 
-              ))}
+                    </Paper>
 
-            </Stack>
+                  ))}
+
+                </Stack>
+
+              </Box>
+
+              {totalPages > 1 && (
+
+                <Stack direction="row" justifyContent="center" spacing={2} mt={2}>
+
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    disabled={page === 1}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    Previous
+                  </Button>
+
+                  <Typography variant="body2">
+                    Page {page} / {totalPages}
+                  </Typography>
+
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    disabled={page === totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Next
+                  </Button>
+
+                </Stack>
+
+              )}
+
+            </>
 
           ) : (
-
             <Typography>No bookings yet</Typography>
-
           )}
 
         </Paper>
 
       </Box>
-
-      {/* BOOKING DIALOG */}
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
 
@@ -391,9 +456,7 @@ function BookingSystem({ currentUser, onLogout }) {
             margin="normal"
           >
             {["A1", "A2", "B1", "B2"].map((l) => (
-              <MenuItem key={l} value={l}>
-                {l}
-              </MenuItem>
+              <MenuItem key={l} value={l}>{l}</MenuItem>
             ))}
           </TextField>
 
@@ -406,9 +469,7 @@ function BookingSystem({ currentUser, onLogout }) {
             margin="normal"
           >
             {availableTimes.map((t) => (
-              <MenuItem key={t} value={t}>
-                {t}
-              </MenuItem>
+              <MenuItem key={t} value={t}>{t}</MenuItem>
             ))}
           </TextField>
 
@@ -420,10 +481,7 @@ function BookingSystem({ currentUser, onLogout }) {
             Close
           </Button>
 
-          <Button
-            onClick={sendBooking}
-            disabled={!level || !time}
-          >
+          <Button onClick={sendBooking} disabled={!level || !time}>
             Book
           </Button>
 
@@ -445,7 +503,9 @@ function BookingSystem({ currentUser, onLogout }) {
       />
 
     </Box>
+
   );
+
 }
 
 export default BookingSystem;
