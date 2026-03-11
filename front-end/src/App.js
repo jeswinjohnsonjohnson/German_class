@@ -3,7 +3,7 @@ import Login from "./Login";
 import BookingSystem from "./BookingSystem";
 import AdminPage from "./AdminPage";
 
-const ADMIN_EMAIL = "jeswinjohnson54@gmail.com";
+const ADMIN_EMAIL = "flockawyn@gmail.com";
 
 function App() {
   const storedUser = localStorage.getItem("user"); // get persisted user
