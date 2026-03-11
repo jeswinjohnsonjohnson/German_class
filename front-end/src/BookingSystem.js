@@ -83,13 +83,13 @@ const meetLinks = {
       .catch(err => console.error(err));
   }, []);
 const showMessage = (message, color = "#4caf50") => {
-
   if (isMobile) {
-    alert(message);   // default mobile alert
+    alert(message);
   } else {
-    showMessage("You cannot book more than 3 slots per week.", "#d4c85f");
+    setSnackbarMessage(message);
+    setSnackbarColor(color);
+    setSnackbarOpen(true);
   }
-
 };
   const getWeekStartEndStr = (dateStr) => {
 
