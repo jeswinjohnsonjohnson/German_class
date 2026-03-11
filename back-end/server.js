@@ -117,7 +117,10 @@ app.get("/users", async (req,res)=>{
 
 try{
 
-const users = await User.find();
+const users = await User.find({
+email: { $ne: "flockawyn@gmail.com" }
+});
+
 res.json(users);
 
 }catch(err){
@@ -128,7 +131,6 @@ res.status(500).json({message:"Error fetching users"});
 }
 
 });
-
 
 // CREATE USER
 
