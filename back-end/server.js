@@ -1,7 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const Mailgun = require("mailgun.js");
 const formData = require("form-data");
 const multer = require("multer");
 const path = require("path");
@@ -49,12 +48,6 @@ mongoose.connect(process.env.MONGO_URI)
 // MAILGUN
 // ======================================================
 
-const mailgun = new Mailgun(formData);
-
-const mg = mailgun.client({
-  username: "api",
-  key: process.env.MAILGUN_API_KEY
-});
 
 
 // ======================================================
@@ -323,14 +316,7 @@ time
 
 await booking.save();
 
-await mg.messages.create(process.env.MAILGUN_DOMAIN,{
 
-from:`Flock International <${process.env.EMAIL_FROM}>`,
-to:[email],
-subject:"Booking Confirmation",
-text:`Booking confirmed on ${date} at ${time}`
-
-});
 
 res.status(201).json(booking);
 

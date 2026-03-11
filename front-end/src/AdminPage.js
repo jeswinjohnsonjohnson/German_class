@@ -27,8 +27,8 @@ const LEVELS = ["A1","A2","B1","B2","C1","C2"];
 
 export default function AdminDashboard({ currentUser, onLogout }) {
 
-const BOOKING_API = "https://germanclass-production.up.railway.app/bookings";
-const USER_API = "https://germanclass-production.up.railway.app/users";
+const BOOKING_API = `${process.env.REACT_APP_API_URL}/bookings`;
+const USER_API = `${process.env.REACT_APP_API_URL}/users`;
 
 const [bookings,setBookings] = useState([]);
 const [loadingBookings,setLoadingBookings] = useState(true);
