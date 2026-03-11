@@ -53,7 +53,7 @@ const API_URL = `${process.env.REACT_APP_API_URL}/bookings`;
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarColor, setSnackbarColor] = useState("#4caf50");
-
+const [bookingLoading, setBookingLoading] = useState(false);
   const [documents, setDocuments] = useState([]);
   const [openDocs, setOpenDocs] = useState(false);
 const [meetAnchor, setMeetAnchor] = useState(null);
@@ -112,12 +112,8 @@ const showMessage = (message, color = "#4caf50") => {
 
   };
 
-  useEffect(() => {
-  const interval = setInterval(() => {
-    fetchBookings();
-  }, 3000); // refresh every 3 seconds
-
-  return () => clearInterval(interval);
+ useEffect(() => {
+  fetchBookings();
 }, []);
 
   const fetchBookings = async () => {
@@ -159,9 +155,7 @@ const showMessage = (message, color = "#4caf50") => {
 
   };
 
-  useEffect(() => {
-    fetchBookings();
-  }, []);
+  
 
   useEffect(() => {
 
@@ -258,56 +252,61 @@ const availableTimes = useMemo(() => {
 
   const sendBooking = async () => {
 
-    if (!level || !time) return;
+  if (!level || !time || bookingLoading) return;
 
-    const booking = {
-      email: userEmail,
-      level,
-      date: selectedDate,
-      time
-    };
+  setBookingLoading(true);
 
-    setBookedSlots((prev) => [
-      ...prev,
-      { ...booking, _id: Math.random().toString() }
-    ]);
-
-   const tempId = Math.random().toString();
-
-setCalendarEvents((prev) => [
-  ...prev,
-  {
-    id: tempId,
-    title: level,
-    start: `${selectedDate}T${time}:00`,
-    display: "block",
-    color: "#4caf50"
-  }
-]);
-
-    setSnackbarColor("#4caf50");
-    setSnackbarMessage(`Booking saved for ${selectedDate} at ${time} (${level})`);
-    setSnackbarOpen(true);
-
-    setOpenDialog(false);
-
-    try {
-
-      await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(booking)
-      });
-
-      fetchBookings();
-
-    } catch (err) {
-      console.error(err);
-    }
-
+  const booking = {
+    email: userEmail,
+    level,
+    date: selectedDate,
+    time
   };
+
+  setBookedSlots((prev) => [
+    ...prev,
+    { ...booking, _id: Math.random().toString() }
+  ]);
+
+  const tempId = Math.random().toString();
+
+  setCalendarEvents((prev) => [
+    ...prev,
+    {
+      id: tempId,
+      title: level,
+      start: `${selectedDate}T${time}:00`,
+      display: "block",
+      color: "#4caf50"
+    }
+  ]);
+
+  setSnackbarColor("#4caf50");
+  setSnackbarMessage(`Booking saved for ${selectedDate} at ${time} (${level})`);
+  setSnackbarOpen(true);
+
+  setOpenDialog(false);
+
+  try {
+
+    await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(booking)
+    });
+
+    fetchBookings();
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    // ✅ allow booking again
+    setBookingLoading(false);
+  }
+
+};
 
   const cancelBooking = async (id) => {
 
@@ -681,8 +680,8 @@ return (
 
           <Button onClick={() => setOpenDialog(false)}>Close</Button>
 
-          <Button onClick={sendBooking} disabled={!level || !time}>
-            Book
+<Button onClick={sendBooking} disabled={!level || !time || bookingLoading}>
+              Book
           </Button>
 
         </DialogActions>

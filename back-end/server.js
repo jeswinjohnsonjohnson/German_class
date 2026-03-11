@@ -5,7 +5,12 @@ const formData = require("form-data");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+const timezone = require("dayjs/plugin/timezone");
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
 const User = require("./models/User");
 const Booking = require("./models/Booking");
 
@@ -287,7 +292,14 @@ app.get("/bookings", async (req,res)=>{
 
 try{
 
-const bookings = await Booking.find();
+// get today's date
+const today = new Date().toISOString().split("T")[0];
+
+// only future bookings
+const bookings = await Booking.find({
+  date: { $gte: today }
+}).sort({ date: 1, time: 1 });
+
 res.json(bookings);
 
 }catch(err){
@@ -299,30 +311,33 @@ res.status(500).json({message:"Error fetching bookings"});
 
 });
 
-
 app.post("/bookings", async (req,res)=>{
 
 try{
 
 const {email,level,date,time} = req.body;
 
+// 🔒 Prevent duplicate booking
+const existingBooking = await Booking.findOne({ date, time, level });
+
+if(existingBooking){
+return res.status(400).json({ message: "This slot is already booked" });
+}
+
 const user = await User.findOne({
 email: email.toLowerCase().trim()
 });
 
 const booking = new Booking({
-
-username:user ? user.username : email.split("@")[0],
-email,
-level,
-date,
-time
-
+  username: user ? user.username : email.split("@")[0],
+  email,
+  level,
+  date,
+  time,
+  createdAt: dayjs().utc().toDate()
 });
 
 await booking.save();
-
-
 
 res.status(201).json(booking);
 
