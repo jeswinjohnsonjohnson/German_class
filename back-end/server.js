@@ -41,26 +41,6 @@ app.use("/uploads", express.static(uploadDir));
 
 
 // ======================================================
-// DOWNLOAD FILE (FORCE DOWNLOAD FOR WINDOWS & ANDROID)
-// ======================================================
-
-app.get("/download/:filename", (req, res) => {
-
-  const filePath = path.join(uploadDir, req.params.filename);
-
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ message: "File not found" });
-  }
-
-  res.setHeader("Content-Disposition", "attachment; filename=" + req.params.filename);
-  res.setHeader("Content-Type", "application/pdf");
-
-  res.sendFile(filePath);
-
-});
-
-
-// ======================================================
 // MONGODB
 // ======================================================
 
@@ -251,8 +231,7 @@ if(!req.file){
 return res.status(400).json({message:"No file uploaded"});
 }
 
-const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-
+const fileUrl = `${req.protocol}://${req.get("host")}/download/${req.file.filename}`;
 const user = await User.findById(userId);
 
 if(!user){
@@ -427,6 +406,32 @@ app.get("/documents", async (req, res) => {
 
     console.error(err);
     res.status(500).json({ message: "Error fetching documents" });
+
+  }
+
+});
+
+// ======================================================
+// DOWNLOAD DOCUMENT (FORCE DOWNLOAD)
+// ======================================================
+
+app.get("/download/:filename", (req, res) => {
+
+  try {
+
+    const filePath = path.join(uploadDir, req.params.filename);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: "File not found" });
+    }
+
+    // force download
+    res.download(filePath);
+
+  } catch (err) {
+
+    console.error(err);
+    res.status(500).json({ message: "Download error" });
 
   }
 
