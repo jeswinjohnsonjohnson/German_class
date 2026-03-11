@@ -48,7 +48,7 @@ const [userIsEditing,setUserIsEditing] = useState(false);
 const [uploadDialog,setUploadDialog] = useState(false);
 const [selectedUser,setSelectedUser] = useState(null);
 const [selectedFile,setSelectedFile] = useState(null);
-
+const [uploading, setUploading] = useState(false);
 const [userFormData,setUserFormData] = useState({
 username:"",
 email:"",
@@ -291,6 +291,10 @@ setUploadDialog(true);
 
 const handleUploadDocument = async ()=>{
 
+if(uploading || !selectedFile) return;
+
+setUploading(true);
+
 try{
 
 const formData = new FormData();
@@ -320,6 +324,10 @@ open:true,
 message:"Upload failed",
 severity:"error"
 });
+
+} finally {
+
+setUploading(false);
 
 }
 
@@ -636,10 +644,13 @@ Cancel
 Cancel
 </Button>
 
-<Button variant="contained" onClick={handleUploadDocument}>
-Upload
+<Button
+variant="contained"
+onClick={handleUploadDocument}
+disabled={uploading || !selectedFile}
+>
+{uploading ? "Uploading..." : "Upload"}
 </Button>
-
 </DialogActions>
 
 </Dialog>

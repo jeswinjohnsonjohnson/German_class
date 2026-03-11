@@ -70,12 +70,16 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
   fileFilter: (req, file, cb) => {
-    cb(null, true); // allow all file types
+
+    if (file.mimetype !== "application/pdf") {
+      return cb(new Error("Only PDF files are allowed"));
+    }
+
+    cb(null, true);
   }
 });
-
 
 // ======================================================
 // USERS
@@ -425,7 +429,8 @@ app.get("/download/:filename", (req, res) => {
       return res.status(404).send("File not found");
     }
 
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${req.params.filename}"`);
 
     res.download(filePath);
 
