@@ -41,7 +41,7 @@ const [userSnackbar,setUserSnackbar] = useState({open:false,message:"",severity:
 
 const [deleteBookingDialog,setDeleteBookingDialog] = useState(false);
 const [selectedBookingId,setSelectedBookingId] = useState(null);
-
+const [uploading,setUploading] = useState(false);
 const [userFormOpen,setUserFormOpen] = useState(false);
 const [userIsEditing,setUserIsEditing] = useState(false);
 
@@ -291,16 +291,31 @@ setUploadDialog(true);
 
 const handleUploadDocument = async ()=>{
 
+if(uploading) return;
+
+if(!selectedFile){
+  setUserSnackbar({
+    open:true,
+    message:"Please select a PDF file",
+    severity:"error"
+  });
+  return;
+}
+
+setUploading(true);
+
 try{
 
 const formData = new FormData();
 formData.append("file",selectedFile);
 formData.append("userId",selectedUser._id);
 
-await fetch(`${USER_API}/upload-doc`,{
+const res = await fetch(`${USER_API}/upload-doc`,{
 method:"POST",
 body:formData
 });
+
+if(!res.ok) throw new Error();
 
 setUploadDialog(false);
 setSelectedFile(null);
@@ -320,6 +335,10 @@ open:true,
 message:"Upload failed",
 severity:"error"
 });
+
+} finally {
+
+setUploading(false);
 
 }
 
@@ -618,8 +637,24 @@ Cancel
 
 <DialogContent>
 
-<input type="file" onChange={(e)=>setSelectedFile(e.target.files[0])} />
+<input
+  type="file"
+  accept="application/pdf"
+  onChange={(e)=>{
+    const file = e.target.files[0];
 
+    if(file && file.type !== "application/pdf"){
+      setUserSnackbar({
+        open:true,
+        message:"Only PDF files are allowed",
+        severity:"error"
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+  }}
+/>
 </DialogContent>
 
 <DialogActions>
@@ -628,10 +663,13 @@ Cancel
 Cancel
 </Button>
 
-<Button variant="contained" onClick={handleUploadDocument}>
-Upload
+<Button
+variant="contained"
+onClick={handleUploadDocument}
+disabled={uploading}
+>
+{uploading ? "Uploading..." : "Upload"}
 </Button>
-
 </DialogActions>
 
 </Dialog>
