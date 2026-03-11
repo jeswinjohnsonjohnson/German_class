@@ -57,7 +57,7 @@ level:"A1"
 });
 
 useEffect(()=>{
-if(!currentUser || currentUser.email !== "jeswinjohnson54@gmail.com"){
+if(!currentUser || currentUser.email !== "flockawyn@gmail.com"){
 alert("Access denied");
 window.location.href="/";
 }
@@ -87,7 +87,13 @@ try{
 setLoadingUsers(true);
 const res = await fetch(USER_API);
 const data = await res.json();
-setUsers(data);
+
+// remove admin from list
+const filteredUsers = data.filter(
+  user => user.email !== "flockawyn@gmail.com"
+);
+
+setUsers(filteredUsers);
 }
 catch{
 setUserSnackbar({open:true,message:"Error fetching users",severity:"error"});
