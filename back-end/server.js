@@ -41,6 +41,26 @@ app.use("/uploads", express.static(uploadDir));
 
 
 // ======================================================
+// DOWNLOAD FILE (FORCE DOWNLOAD FOR WINDOWS & ANDROID)
+// ======================================================
+
+app.get("/download/:filename", (req, res) => {
+
+  const filePath = path.join(uploadDir, req.params.filename);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ message: "File not found" });
+  }
+
+  res.setHeader("Content-Disposition", "attachment; filename=" + req.params.filename);
+  res.setHeader("Content-Type", "application/pdf");
+
+  res.sendFile(filePath);
+
+});
+
+
+// ======================================================
 // MONGODB
 // ======================================================
 
