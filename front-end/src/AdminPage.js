@@ -48,7 +48,7 @@ const [userIsEditing,setUserIsEditing] = useState(false);
 const [uploadDialog,setUploadDialog] = useState(false);
 const [selectedUser,setSelectedUser] = useState(null);
 const [selectedFile,setSelectedFile] = useState(null);
-const [uploading, setUploading] = useState(false);
+
 const [userFormData,setUserFormData] = useState({
 username:"",
 email:"",
@@ -291,10 +291,6 @@ setUploadDialog(true);
 
 const handleUploadDocument = async ()=>{
 
-if(uploading || !selectedFile) return;
-
-setUploading(true);
-
 try{
 
 const formData = new FormData();
@@ -324,10 +320,6 @@ open:true,
 message:"Upload failed",
 severity:"error"
 });
-
-} finally {
-
-setUploading(false);
 
 }
 
@@ -497,28 +489,20 @@ u.documents.map((doc) => (
 
   <div key={doc._id}>
 
-   <Button
-  size="small"
-  onClick={() => {
-    const link = document.createElement("a");
-    link.href = doc.fileUrl;
-    link.setAttribute("download", doc.name);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  }}
->
-  {doc.name}
-</Button>
+    <a href={doc.fileUrl} target="_blank" rel="noreferrer">
+      {doc.name}
+    </a>
 
 
 
-   <Button
-  size="small"
-  onClick={() => window.open(doc.fileUrl, "_blank")}
->
-  {doc.name}
-</Button>
+    <Button
+      size="small"
+      color="error"
+      sx={{ ml: 1 }}
+      onClick={() => handleDeleteDocument(u._id, doc._id)}
+    >
+      Delete
+    </Button>
 
   </div>
 
@@ -644,13 +628,10 @@ Cancel
 Cancel
 </Button>
 
-<Button
-variant="contained"
-onClick={handleUploadDocument}
-disabled={uploading || !selectedFile}
->
-{uploading ? "Uploading..." : "Upload"}
+<Button variant="contained" onClick={handleUploadDocument}>
+Upload
 </Button>
+
 </DialogActions>
 
 </Dialog>

@@ -70,16 +70,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
   fileFilter: (req, file, cb) => {
-
-    if (file.mimetype !== "application/pdf") {
-      return cb(new Error("Only PDF files are allowed"));
-    }
-
-    cb(null, true);
+    cb(null, true); // allow all file types
   }
 });
+
 
 // ======================================================
 // USERS
@@ -235,7 +231,8 @@ if(!req.file){
 return res.status(400).json({message:"No file uploaded"});
 }
 
-const fileUrl = `${req.protocol}://${req.get("host")}/download/${req.file.filename}`;
+const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+
 const user = await User.findById(userId);
 
 if(!user){
@@ -410,34 +407,6 @@ app.get("/documents", async (req, res) => {
 
     console.error(err);
     res.status(500).json({ message: "Error fetching documents" });
-
-  }
-
-});
-
-// ======================================================
-// DOWNLOAD DOCUMENT (FORCE DOWNLOAD)
-// ======================================================
-
-app.get("/download/:filename", (req, res) => {
-
-  try {
-
-    const filePath = path.join(uploadDir, req.params.filename);
-
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).send("File not found");
-    }
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="${req.params.filename}"`);
-
-    res.download(filePath);
-
-  } catch (err) {
-
-    console.error(err);
-    res.status(500).send("Download error");
 
   }
 

@@ -155,7 +155,6 @@ const showMessage = (message, color = "#4caf50") => {
 
   };
 
-  
 
   useEffect(() => {
 
@@ -719,13 +718,13 @@ return (
 
                   <Typography>{doc.name}</Typography>
 
-   <Button
+                <Button
   variant="contained"
   size="small"
   startIcon={<Download />}
-  onClick={() => {
-    window.location.href = doc.fileUrl;
-  }}
+  href={doc.fileUrl}
+  target="_blank"
+  download
 >
   Download
 </Button>
