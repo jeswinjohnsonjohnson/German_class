@@ -35,7 +35,7 @@ import {
 function BookingSystem({ currentUser, onLogout }) {
  const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const API_URL = "https://germanclass-production.up.railway.app/bookings";
+const API_URL = `${process.env.REACT_APP_API_URL}/bookings`;
   const userEmail =
     currentUser && typeof currentUser === "object"
       ? currentUser.email
@@ -77,7 +77,7 @@ const meetLinks = {
   B2: "https://meet.google.com/hcz-dwbe-dgn"
 };
   useEffect(() => {
-    fetch("https://germanclass-production.up.railway.app/documents")
+    fetch(`${process.env.REACT_APP_API_URL}/documents`)
       .then(res => res.json())
       .then(data => setDocuments(data))
       .catch(err => console.error(err));

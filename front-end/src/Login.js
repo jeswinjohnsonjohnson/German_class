@@ -33,7 +33,7 @@ function Login({ onLogin }) {
 
     try {
       const res = await fetch(
-        "https://germanclass-production.up.railway.app/users/login",
+      `${process.env.REACT_APP_API_URL}/users/login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
