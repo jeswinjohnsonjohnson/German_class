@@ -3,7 +3,8 @@ import { useState, useEffect, useMemo } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-
+import { Info } from "@mui/icons-material";
+import { Tooltip } from "@mui/material";
 import {
   TextField,
   Button,
@@ -429,13 +430,42 @@ return (
           </Typography>
 
         </Stack>
+<Stack
+  direction="row"
+  spacing={1.5}
+  alignItems="center"
+  flexWrap="wrap"
+  justifyContent={{ xs: "flex-start", sm: "flex-end" }}
+>
 
-        <Stack
-          direction="row"
-          spacing={1}
-          flexWrap="wrap"
-          justifyContent={{ xs: "flex-start", sm: "flex-end" }}
-        >
+  {!isMobile && (
+    <Tooltip
+      arrow
+      placement="bottom"
+      title={
+        <Box sx={{ fontSize: 13, lineHeight: 1.6 }}>
+          <strong>How to use the booking system</strong>
+          <br />
+          📅 Select a date from the calendar <br />
+          🎓 Choose your level and available time <br />
+          ⚠️ Maximum 3 bookings per week <br />
+          📄 Download learning materials anytime <br />
+          🎥 Join the class using the Meet button
+        </Box>
+      }
+    >
+      <Info
+        color="primary"
+        sx={{
+          cursor: "pointer",
+          fontSize: 24,
+          display: "flex",
+          alignItems: "center"
+        }}
+      />
+    </Tooltip>
+  )}
+
 <Button
   variant="outlined"
   startIcon={<VideoCall />}
