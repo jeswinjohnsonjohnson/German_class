@@ -720,15 +720,16 @@ return (
 
                   <Typography>{doc.name}</Typography>
 
-                  <Button
-                    variant="contained"
-                    size="small"
-                    startIcon={<Download />}
-                    href={doc.fileUrl}
-                    target="_blank"
-                  >
-                    Download
-                  </Button>
+                <Button
+  variant="contained"
+  size="small"
+  startIcon={<Download />}
+  href={doc.fileUrl}
+  target="_blank"
+  download
+>
+  Download
+</Button>
 
                 </Paper>
 

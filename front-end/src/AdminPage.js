@@ -618,8 +618,11 @@ Cancel
 
 <DialogContent>
 
-<input type="file" onChange={(e)=>setSelectedFile(e.target.files[0])} />
-
+<input
+  type="file"
+  accept="*/*"
+  onChange={(e) => setSelectedFile(e.target.files[0])}
+/>
 </DialogContent>
 
 <DialogActions>
