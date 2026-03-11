@@ -422,16 +422,20 @@ app.get("/download/:filename", (req, res) => {
     const filePath = path.join(uploadDir, req.params.filename);
 
     if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: "File not found" });
+      return res.status(404).send("File not found");
     }
 
-    // force download
-    res.download(filePath);
+    const filename = path.basename(filePath);
+
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Type", "application/octet-stream");
+
+    res.sendFile(filePath);
 
   } catch (err) {
 
     console.error(err);
-    res.status(500).json({ message: "Download error" });
+    res.status(500).send("Download error");
 
   }
 

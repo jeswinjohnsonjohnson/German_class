@@ -489,9 +489,19 @@ u.documents.map((doc) => (
 
   <div key={doc._id}>
 
-    <a href={doc.fileUrl} target="_blank" rel="noreferrer">
-      {doc.name}
-    </a>
+   <Button
+  size="small"
+  onClick={() => {
+    const link = document.createElement("a");
+    link.href = doc.fileUrl;
+    link.setAttribute("download", doc.name);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }}
+>
+  {doc.name}
+</Button>
 
 
 
