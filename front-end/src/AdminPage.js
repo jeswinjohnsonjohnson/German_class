@@ -505,14 +505,12 @@ u.documents.map((doc) => (
 
 
 
-    <Button
-      size="small"
-      color="error"
-      sx={{ ml: 1 }}
-      onClick={() => handleDeleteDocument(u._id, doc._id)}
-    >
-      Delete
-    </Button>
+   <Button
+  size="small"
+  onClick={() => window.open(doc.fileUrl, "_blank")}
+>
+  {doc.name}
+</Button>
 
   </div>
 

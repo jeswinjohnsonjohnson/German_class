@@ -425,12 +425,9 @@ app.get("/download/:filename", (req, res) => {
       return res.status(404).send("File not found");
     }
 
-    const filename = path.basename(filePath);
+    res.setHeader("Access-Control-Allow-Origin", "*");
 
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    res.setHeader("Content-Type", "application/octet-stream");
-
-    res.sendFile(filePath);
+    res.download(filePath);
 
   } catch (err) {
 

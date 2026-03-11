@@ -719,18 +719,11 @@ return (
 
                   <Typography>{doc.name}</Typography>
 
-         <Button
+    <Button
   variant="contained"
   size="small"
   startIcon={<Download />}
-  onClick={() => {
-    const link = document.createElement("a");
-    link.href = doc.fileUrl;
-    link.setAttribute("download", doc.name);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  }}
+  onClick={() => window.open(doc.fileUrl, "_blank")}
 >
   Download
 </Button>
