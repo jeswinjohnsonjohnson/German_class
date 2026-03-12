@@ -77,12 +77,25 @@ const meetLinks = {
   B1: "https://meet.google.com/hcz-dwbe-dgn",
   B2: "https://meet.google.com/hcz-dwbe-dgn"
 };
-  useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/documents`)
-      .then(res => res.json())
-      .then(data => setDocuments(data))
-      .catch(err => console.error(err));
-  }, []);
+
+
+useEffect(() => {
+
+  if (!currentUser) return;
+
+  const userId = currentUser?.id || currentUser?._id;
+
+  if (!userId) return;
+
+  fetch(`${process.env.REACT_APP_API_URL}/users/${userId}/documents`)
+    .then(res => res.json())
+    .then(data => {
+      setDocuments(data);
+    })
+    .catch(err => console.error("Document fetch error:", err));
+
+}, [currentUser]);
+
 const showMessage = (message, color = "#4caf50") => {
   if (isMobile) {
     alert(message);
