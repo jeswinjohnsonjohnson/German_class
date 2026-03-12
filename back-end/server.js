@@ -260,26 +260,43 @@ res.status(500).json({message:"Upload failed"});
 
 // DELETE DOCUMENT
 
-app.delete("/users/:userId/documents/:docId", async (req,res)=>{
+app.delete("/users/:userId/documents/:docId", async (req, res) => {
 
-try{
+  try {
 
-const {userId,docId} = req.params;
+    const { userId, docId } = req.params;
 
-const user = await User.findById(userId);
+    const user = await User.findById(userId);
 
-user.documents = user.documents.filter(d=>d._id.toString() !== docId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-await user.save();
+    const doc = user.documents.id(docId);
 
-res.json({message:"Document deleted"});
+    if (!doc) {
+      return res.status(404).json({ message: "Document not found" });
+    }
 
-}catch(err){
+    // delete file from disk
+    const filePath = path.join(uploadDir, path.basename(doc.fileUrl));
 
-console.error(err);
-res.status(500).json({message:"Error deleting document"});
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
 
-}
+    doc.deleteOne();
+
+    await user.save();
+
+    res.json({ message: "Document deleted" });
+
+  } catch (err) {
+
+    console.error(err);
+    res.status(500).json({ message: "Error deleting document" });
+
+  }
 
 });
 

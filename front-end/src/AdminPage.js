@@ -319,6 +319,40 @@ const formatDateTime = (date, time) => {
 
   };
 
+  // DELETE DOCUMENT
+
+const handleDeleteDocument = async (userId, docId) => {
+
+  if(!window.confirm("Delete this document?")) return;
+
+  try {
+
+    const res = await fetch(`${USER_API}/${userId}/documents/${docId}`, {
+      method: "DELETE"
+    });
+
+    if(!res.ok) throw new Error();
+
+    setUserSnackbar({
+      open: true,
+      message: "Document deleted",
+      severity: "success"
+    });
+
+    fetchUsers();
+
+  } catch {
+
+    setUserSnackbar({
+      open: true,
+      message: "Error deleting document",
+      severity: "error"
+    });
+
+  }
+
+};
+
   // UPLOAD DOC
 
   const openUploadDialog = (user)=>{
