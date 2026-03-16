@@ -74,7 +74,25 @@ import { Tooltip } from "@mui/material";
   window.location.href="/";
   }
   },[currentUser]);
+const formatDualTime = (date, time) => {
+  const d = new Date(`${date}T${time}:00`);
 
+  const lvTime = d.toLocaleTimeString("en-GB", {
+    timeZone: "Europe/Riga",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+
+  const istTime = d.toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+
+  return `${lvTime} LV (${istTime} IST)`;
+};
   // FETCH BOOKINGS
 
   const fetchBookings = async ()=>{
@@ -524,7 +542,7 @@ borderLeft:"6px solid #9c27b0"
         </Typography>
 
         <Typography variant="body2" sx={{ color: "#888" }}>
-          {b.time}
+    {formatDualTime(b.date, b.time)}
         </Typography>
       </Box>
     ))
@@ -591,7 +609,7 @@ borderLeft:"6px solid #9c27b0"
             </Typography>
 
             <Typography variant="body2" sx={{ color: "#888" }}>
-              {b.time}
+             {formatDualTime(b.date, b.time)}
             </Typography>
           </Box>
         ))
@@ -646,9 +664,9 @@ borderLeft:"6px solid #009688"
   <TableRow>
   <TableCell>Username</TableCell>
   <TableCell>Email</TableCell>
-  <TableCell>Password</TableCell>
   <TableCell>Level</TableCell>
-  <TableCell>Documents</TableCell>
+  <TableCell>Date</TableCell>
+  <TableCell>Time Zone (LV / IND)</TableCell>
   <TableCell>Action</TableCell>
   </TableRow>
   </TableHead>
@@ -663,7 +681,9 @@ borderLeft:"6px solid #009688"
   <TableCell>{b.email}</TableCell>
   <TableCell>{b.level}</TableCell>
   <TableCell>{new Date(b.date).toLocaleDateString()}</TableCell>
-  <TableCell>{b.time}</TableCell>
+  <TableCell>
+  {formatDualTime(b.date, b.time)}
+</TableCell>
 
   <TableCell>
 
@@ -741,6 +761,7 @@ borderLeft:"6px solid #009688"
   <TableCell>Email</TableCell>
   <TableCell>Password</TableCell>
   <TableCell>Level</TableCell>
+  <TableCell>Documents</TableCell>
   <TableCell>Action</TableCell>
   </TableRow>
   </TableHead>

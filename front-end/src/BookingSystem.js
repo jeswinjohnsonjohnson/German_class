@@ -62,14 +62,14 @@ const [meetAnchor, setMeetAnchor] = useState(null);
   const bookingsPerPage = 3;
 
   const timeSlots = [
-    "08:00",
+    "07:00",
+    "09:00",
     "11:00",
     "12:00",
     "14:00",
-    "16:00",
     "18:00",
-    "20:00",
-    "22:00"
+    "19:00",
+    "20:00"
   ];
 const meetLinks = {
   A1: "https://meet.google.com/akj-wzxd-ejn",
@@ -850,12 +850,12 @@ return (
     vertical: "top",
     horizontal: "right"
   }}
-  sx={{
-    mt: isMobile ? 14 : 0,   // pushes toast down on mobile
-    "& .MuiSnackbarContent-root": {
-      backgroundColor: snackbarColor
-    }
-  }}
+ sx={{
+  mt: isMobile ? 14 : 10, // push down on desktop too
+  "& .MuiSnackbarContent-root": {
+    backgroundColor: snackbarColor
+  }
+}}
 />
       
 
