@@ -6,6 +6,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { Info } from "@mui/icons-material";
 import { Tooltip } from "@mui/material";
 import { PlayCircleFilled } from "@mui/icons-material";
+import { Avatar } from "@mui/material";
 import {
   TextField,
   Button,
@@ -63,9 +64,25 @@ const [meetAnchor, setMeetAnchor] = useState(null);
   const [page, setPage] = useState(1);
   
   const bookingsPerPage = 3;
+  const teachers = [
+  {
+    id: 1,
+    name: "Awin B",
+    avatar: "/Awin.jpeg",
+    times: ["07:00","09:00","11:00","14:00","16:00","18:00","20:00"]
+  },
+  {
+    id: 2,
+    name: "Jesna J",
+    avatar: "/jesna.png",
+    times: ["08:00","09:00","10:00","11:00","12:00","18:00"]
+  }
+];
 
   const timeSlots = [
     "07:00",
+    "08:00",
+    "10:00",
     "09:00",
     "11:00",
     "12:00",
@@ -108,6 +125,10 @@ const showMessage = (message, color = "#4caf50") => {
     setSnackbarOpen(true);
   }
 };
+useEffect(() => {
+  const today = new Date().toISOString().split("T")[0];
+  setSelectedDate(today);
+}, []);
 
 useEffect(() => {
   if (!currentUser) return;
@@ -433,7 +454,7 @@ return (
   sx={{
     minHeight: "100vh",
     background: "#5c0000", // full dark red
-    py: 4,
+    py: 2,
     boxShadow: "inset 0 0 120px rgba(0,0,0,0.6)" // dark shadow effect
   }}
 >
@@ -452,99 +473,124 @@ return (
       {/* HEADER */}
 
       <Stack
-        direction={{ xs: "column", sm: "row" }}
-        justifyContent="space-between"
-        alignItems={{ xs: "flex-start", sm: "center" }}
-        spacing={{ xs: 2, sm: 0 }}
-        mb={3}
-      >
-
-        <Stack direction="row" alignItems="center" spacing={2}>
-
-          <Box
-            component="img"
-            src="/logo.png"
-            alt="logo"
-            sx={{
-              height: { xs: 60, sm: 80, md: 110 }
-            }}
-          />
-
-          <Typography variant="h6" color="primary" fontWeight="bold">
-            Welcome, {username} 👋
-          </Typography>
-
-        </Stack>
-<Stack
-  direction="row"
-  spacing={1.5}
-  alignItems="center"
-  flexWrap="wrap"
-  justifyContent={{ xs: "flex-start", sm: "flex-end" }}
+  direction={{ xs: "column", sm: "row" }}
+  justifyContent="space-between"
+  alignItems={{ xs: "flex-start", sm: "center" }}
+  spacing={{ xs: 2, sm: 0 }}
+  mb={3}
 >
 
-  {!isMobile && (
-    <Tooltip
-      arrow
-      placement="bottom"
-      title={
-        <Box sx={{ fontSize: 13, lineHeight: 1.6 }}>
-          <strong>How to use the booking system</strong>
-          <br />
-          📅 Select a date from the calendar <br />
-          🎓 Choose your level and available time <br />
-          ⚠️ Maximum 3 bookings per week <br />
-          📄 Download learning materials anytime <br />
-          🎥 Join the class using the Meet button
-        </Box>
-      }
+  {/* LEFT SIDE */}
+  <Stack direction="row" alignItems="center" spacing={2}>
+    <Box
+      component="img"
+      src="/logo.png"
+      alt="logo"
+      sx={{
+        height: { xs: 60, sm: 80, md: 110 }
+      }}
+    />
+
+    <Typography variant="h6" color="primary" fontWeight="bold">
+      Welcome, {username} 👋
+    </Typography>
+  </Stack>
+
+  {/* RIGHT SIDE BUTTON GRID */}
+  <Box
+    sx={{
+      width: { xs: "100%", sm: "auto" },
+      display: "grid",
+      gridTemplateColumns: {
+        xs: "1fr 1fr",                 // 📱 2 per row
+        sm: "auto auto auto auto auto" // 💻 5 inline
+      },
+      gap: 1.5,
+      mt: { xs: 1, sm: 0 }
+    }}
+  >
+    {/* MEET */}
+    <Button
+      variant="outlined"
+      startIcon={<VideoCall />}
+      onClick={(e) => setMeetAnchor(e.currentTarget)}
+      sx={{ width: "100%", height: 42 }}
     >
-      <Info
-        color="primary"
-        sx={{
-          cursor: "pointer",
-          fontSize: 24,
-          display: "flex",
-          alignItems: "center"
-        }}
-      />
-    </Tooltip>
-  )}
+      Meet
+    </Button>
 
-<Button
-  variant="outlined"
-  startIcon={<VideoCall />}
-  onClick={(e) => setMeetAnchor(e.currentTarget)}
->
-  Meet
-</Button>
-<Button
-  variant="outlined"
-  startIcon={<PlayCircleFilled />}
-  onClick={() => setOpenVideos(true)}
->
-  VIDEOS
-</Button>
-          <Button
-            variant="outlined"
-            startIcon={<Description />}
-            onClick={() => setOpenDocs(true)}
-          >
-          MATERIALS
-          </Button>
+    {/* VIDEOS */}
+    <Button
+      variant="outlined"
+      startIcon={<PlayCircleFilled />}
+      onClick={() => setOpenVideos(true)}
+      sx={{ width: "100%", height: 42 }}
+    >
+      Videos
+    </Button>
 
-          <Button
-            variant="outlined"
-            color="error"
-            size="small"
-            onClick={onLogout}
-          >
-            Logout
-          </Button>
+    {/* MATERIALS */}
+    <Button
+      variant="outlined"
+      startIcon={<Description />}
+      onClick={() => setOpenDocs(true)}
+      sx={{ width: "100%", height: 42 }}
+    >
+      Materials
+    </Button>
+ {/* INFO */}
+    {isMobile ? (
+      <Button
+        variant="outlined"
+        startIcon={<Info />}
+        sx={{ width: "100%", height: 42 }}
+        onClick={() =>
+          alert(
+            "📅 Select a date\n🎓 Choose level & time\n⚠️ Max 3 bookings/week\n📄 Download materials\n🎥 Join via Meet"
+          )
+        }
+      >
+        Info
+      </Button>
+    ) : (
+      <Tooltip
+        arrow
+        placement="top"
+        title={
+          <Box sx={{ fontSize: 13, lineHeight: 1.6 }}>
+            <strong>How to use the booking system</strong>
+            <br />
+            📅 Select a date from the calendar <br />
+            🎓 Choose your level and available time <br />
+            ⚠️ Maximum 3 bookings per week <br />
+            📄 Download learning materials anytime <br />
+            🎥 Join the class using the Meet button
+          </Box>
+        }
+      >
+        <Button
+          variant="outlined"
+          startIcon={<Info />}
+          sx={{ width: "100%", height: 42 }}
+        >
+          Info
+        </Button>
+      </Tooltip>
+    )}
+    {/* LOGOUT */}
+    <Button
+      variant="outlined"
+      color="error"
+      onClick={onLogout}
+      sx={{ width: "100%", height: 42 }}
+    >
+      Logout
+    </Button>
 
-        </Stack>
+   
+  </Box>
 
-      </Stack>
+</Stack>
 
       {/* MAIN LAYOUT */}
 
@@ -563,7 +609,7 @@ return (
           sx={{
             flex: 2,
             p: { xs: 1, sm: 2 },
-            overflowX: "auto"
+            overflowX: "auto",
           }}
         >
 
@@ -606,112 +652,193 @@ return (
 
         {/* BOOKINGS PANEL */}
 
-       <Paper
+     {/* RIGHT SIDE PANEL */}
+<Box
   sx={{
     width: { xs: "100%", md: 320 },
-    p: 3,
-    bgcolor: "#f9f9f9",
     display: "flex",
     flexDirection: "column",
-    height: { xs: "auto", md: 710 }
+    gap: 2
   }}
 >
+  
 
-          <Typography variant="h6" mb={2} color="primary" fontWeight="bold">
-            Your Bookings
-          </Typography>
+  {/* AVAILABILITY */}
+  <Paper sx={{ p: 2 }}>
+    <Typography
+  variant="h6"
+  sx={{
+    color: "#1976d2",
+    fontWeight: 700,
+    mb: 2
+  }}
+>
+  Available Time
+</Typography>
+    <Stack spacing={2}>
+  {teachers.map((teacher) => (
+    <Box
+      key={teacher.id}
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 1.5,
+        borderBottom: "1px solid #eee",
+        pb: 1.5
+      }}
+    >
+      {/* TOP: Avatar + Name */}
+      <Stack direction="row" alignItems="center" spacing={1.5}>
+        <Avatar src={teacher.avatar} />
 
-          {userBookings.length > 0 ? (
+        <Typography
+          variant="body2"
+          fontWeight={600}
+          sx={{ lineHeight: 1.2 }}
+        >
+          {teacher.name}
+        </Typography>
+      </Stack>
 
-            <>
-              <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
+      {/* TIMES */}
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 1
+        }}
+      >
+        {teacher.times.map((t) => {
+          const isBooked = bookedSlots.some(
+            (b) =>
+              b.date === selectedDate &&
+              b.time === t
+          );
 
-                <Stack spacing={2}>
+          return (
+            <Chip
+              key={t}
+              label={t}
+              size="small"
+              clickable={!isBooked}
+              onClick={() => {
+                if (!selectedDate) return;
 
-                  {paginatedBookings.map((b) => (
+                if (!isBooked) {
+                  setLevel(teacher.level);
+                  setTime(t);
+                  setOpenDialog(true);
+                }
+              }}
+              sx={{
+                minWidth: 60,
+                justifyContent: "center",
+                fontWeight: 500
+              }}
+              color={isBooked ? "error" : "success"}
+              variant={isBooked ? "outlined" : "filled"}
+            />
+          );
+        })}
+      </Box>
+    </Box>
+  ))}
+</Stack>
+  </Paper>
 
-                    <Paper key={b._id} sx={{ p: 2 }}>
+  {/* YOUR BOOKINGS */}
+  <Paper
+    sx={{
+      width: "100%",
+      p: 3,
+      bgcolor: "#ffffff",
+      display: "flex",
+      flexDirection: "column",
+      height: { xs: "auto", md: 410 }
+    }}
+  >
+    <Typography variant="h6" mb={2} color="primary" fontWeight="bold">
+      Your Bookings
+    </Typography>
 
-                      <Stack spacing={1}>
+    {userBookings.length > 0 ? (
+      <>
+        <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
+          <Stack spacing={2}>
+            {paginatedBookings.map((b) => (
+              <Paper key={b._id} sx={{ p: 2 }}>
+                <Stack spacing={1}>
 
-                        <Stack direction="row" spacing={1}>
-                          <CalendarToday fontSize="small" />
-                          <Typography variant="body2">{b.date}</Typography>
-                        </Stack>
+                  <Stack direction="row" spacing={1}>
+                    <CalendarToday fontSize="small" />
+                    <Typography variant="body2">{b.date}</Typography>
+                  </Stack>
 
-                        <Stack direction="row" spacing={1}>
-                          <AccessTime fontSize="small" />
-                          <Typography variant="body2">{b.time}</Typography>
-                        </Stack>
+                  <Stack direction="row" spacing={1}>
+                    <AccessTime fontSize="small" />
+                    <Typography variant="body2">{b.time}</Typography>
+                  </Stack>
 
-                        <Stack direction="row" spacing={1}>
-                          <Star fontSize="small" />
-                          <Chip label={b.level} size="small" color="success" />
-                        </Stack>
+                  <Stack direction="row" spacing={1}>
+                    <Star fontSize="small" />
+                    <Chip label={b.level} size="small" color="success" />
+                  </Stack>
 
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          size="small"
-                          onClick={() => cancelBooking(b._id)}
-                        >
-                          Cancel
-                        </Button>
-
-                      </Stack>
-
-                    </Paper>
-
-                  ))}
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    size="small"
+                    onClick={() => cancelBooking(b._id)}
+                  >
+                    Cancel
+                  </Button>
 
                 </Stack>
+              </Paper>
+            ))}
+          </Stack>
+        </Box>
+
+        {/* PAGINATION */}
+        {totalPages > 1 && (
+          <Stack direction="row" spacing={1} justifyContent="center" mt={2}>
+            <Button
+              size="small"
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+            >
+              Prev
+            </Button>
+
+            {[page, page + 1]
+              .filter((p) => p <= totalPages)
+              .map((p) => (
+                <Button
+                  key={p}
+                  size="small"
+                  variant={page === p ? "contained" : "outlined"}
+                  onClick={() => setPage(p)}
+                >
+                  {p}
+                </Button>
+              ))}
+
+            <Button
+              size="small"
+              disabled={page === totalPages}
+              onClick={() => setPage(page + 1)}
+            >
+              Next
+            </Button>
+          </Stack>
+        )}
+      </>
+    ) : (
+      <Typography>No bookings yet</Typography>
+    )}
+  </Paper>
 
 </Box>
-
-{/* PAGINATION AT BOTTOM OF RIGHT PANEL */}
-
-{totalPages > 1 && (
-  <Stack direction="row" spacing={1} justifyContent="center" mt={2}>
-
-    <Button
-      size="small"
-      disabled={page === 1}
-      onClick={() => setPage(page - 1)}
-    >
-      Prev
-    </Button>
-
-    {[page, page + 1]
-      .filter((p) => p <= totalPages)
-      .map((p) => (
-        <Button
-          key={p}
-          size="small"
-          variant={page === p ? "contained" : "outlined"}
-          onClick={() => setPage(p)}
-        >
-          {p}
-        </Button>
-      ))}
-
-    <Button
-      size="small"
-      disabled={page === totalPages}
-      onClick={() => setPage(page + 1)}
-    >
-      Next
-    </Button>
-
-  </Stack>
-)}
-
-            </>
-
-          ) : (
-            <Typography>No bookings yet</Typography>
-          )}
-
-        </Paper>
 
       </Box>
       
