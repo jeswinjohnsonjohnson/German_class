@@ -5,6 +5,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { Info } from "@mui/icons-material";
 import { Tooltip } from "@mui/material";
+import { PlayCircleFilled } from "@mui/icons-material";
 import {
   TextField,
   Button,
@@ -50,7 +51,8 @@ const API_URL = `${process.env.REACT_APP_API_URL}/bookings`;
   const [bookedSlots, setBookedSlots] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
-
+const [videos, setVideos] = useState([]);
+const [openVideos, setOpenVideos] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarColor, setSnackbarColor] = useState("#4caf50");
@@ -59,6 +61,7 @@ const [bookingLoading, setBookingLoading] = useState(false);
   const [openDocs, setOpenDocs] = useState(false);
 const [meetAnchor, setMeetAnchor] = useState(null);
   const [page, setPage] = useState(1);
+  
   const bookingsPerPage = 3;
 
   const timeSlots = [
@@ -105,6 +108,20 @@ const showMessage = (message, color = "#4caf50") => {
     setSnackbarOpen(true);
   }
 };
+
+useEffect(() => {
+  if (!currentUser) return;
+
+  const userId = currentUser?.id || currentUser?._id;
+
+  fetch(`${process.env.REACT_APP_API_URL}/users/${userId}/videos`)
+    .then(res => res.json())
+    .then(data => setVideos(data))
+    .catch(err => console.error(err));
+
+}, [currentUser]);
+
+
   const getWeekStartEndStr = (dateStr) => {
 
     const date = new Date(dateStr);
@@ -395,6 +412,21 @@ const availableTimes = useMemo(() => {
   setOpenDialog(true);
 };
 
+const getThumbnail = (url) => {
+  try {
+    const videoId =
+      url.split("v=")[1]?.split("&")[0] || // youtube.com
+      url.split("youtu.be/")[1]?.split("?")[0] || // short link
+      url.split("shorts/")[1]?.split("?")[0]; // shorts
+
+    return videoId
+      ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+      : null;
+  } catch {
+    return null;
+  }
+};
+
 return (
 
 <Box
@@ -485,6 +517,13 @@ return (
   onClick={(e) => setMeetAnchor(e.currentTarget)}
 >
   Meet
+</Button>
+<Button
+  variant="outlined"
+  startIcon={<PlayCircleFilled />}
+  onClick={() => setOpenVideos(true)}
+>
+  VIDEOS
 </Button>
           <Button
             variant="outlined"
@@ -795,6 +834,89 @@ return (
         </DialogActions>
 
       </Dialog>
+
+
+   <Dialog
+  open={openVideos}
+  onClose={() => setOpenVideos(false)}
+  maxWidth="sm"
+  fullWidth
+>
+  <DialogTitle sx={{ fontWeight: "bold" }}>
+    Videos
+  </DialogTitle>
+
+  <DialogContent>
+    {videos.length > 0 ? (
+      <Stack spacing={2} mt={1}>
+
+        {videos.map((v, index) => {
+          const thumbnail = getThumbnail(v.url);
+
+          return (
+            <Paper
+              key={index}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                p: 1.5,
+                borderRadius: 2,
+                gap: 2,
+                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor: "#f5f5f5"
+                }
+              }}
+              onClick={() => window.open(v.url, "_blank")}
+            >
+
+              {/* THUMBNAIL */}
+              {thumbnail ? (
+                <Box
+                  component="img"
+                  src={thumbnail}
+                  sx={{
+                    width: 120,
+                    height: 70,
+                    objectFit: "cover",
+                    borderRadius: 1
+                  }}
+                />
+              ) : (
+                <Box
+                  sx={{
+                    width: 120,
+                    height: 70,
+                    background: "#ddd",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 1
+                  }}
+                >
+                  No Preview
+                </Box>
+              )}
+
+              {/* TITLE */}
+              <Typography fontWeight="500">
+                {v.name}
+              </Typography>
+
+            </Paper>
+          );
+        })}
+
+      </Stack>
+    ) : (
+      <Typography mt={2}>No videos available</Typography>
+    )}
+  </DialogContent>
+
+  <DialogActions>
+    <Button onClick={() => setOpenVideos(false)}>Close</Button>
+  </DialogActions>
+</Dialog>
 {/* GOOGLE MEET MENU */}
 
 <Menu

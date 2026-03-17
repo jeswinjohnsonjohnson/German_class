@@ -1,38 +1,45 @@
-const mongoose = require("mongoose");
+  const mongoose = require("mongoose");
 
-const documentSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true
-  },
-  fileUrl: {
-    type: String,
-    required: true
-  }
-});
+  const documentSchema = new mongoose.Schema({
+    name: {
+      type: String,
+      required: true
+    },
+    fileUrl: {
+      type: String,
+      required: true
+    }
+  });
 
-const userSchema = new mongoose.Schema({
-  username: { 
-    type: String, 
-    required: true 
-  },
+  const userSchema = new mongoose.Schema({
+    username: { 
+      type: String, 
+      required: true 
+    },
 
-  email: { 
-    type: String, 
-    required: true, 
-    unique: true 
-  },
+    email: { 
+      type: String, 
+      required: true, 
+      unique: true 
+    },
 
-  password: { 
-    type: String, 
-    required: true 
-  },
+    password: { 
+      type: String, 
+      required: true 
+    },
 
-  level: { 
-    type: String 
-  },
+    level: { 
+      type: String 
+    },
 
-  documents: [documentSchema]   // ← documents stored per user
-});
+    documents: [documentSchema] ,  // ← documents stored per user
+    videos: [
+    {
+      name: String,
+      url: String,
+      level: String
+    }
+  ]
+  });
 
-module.exports = mongoose.model("User", userSchema);
+  module.exports = mongoose.model("User", userSchema);

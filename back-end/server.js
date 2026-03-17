@@ -448,6 +448,89 @@
     }
 
   });
+  app.delete("/users/:userId/videos/:videoId", async (req, res) => {
+  try {
+    const { userId, videoId } = req.params;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.videos = user.videos.filter(
+      (v) => v._id.toString() !== videoId
+    );
+
+    await user.save();
+
+    res.json({ message: "Video deleted" });
+
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting video" });
+  }
+});
+
+app.put("/users/:userId/videos/:videoId", async (req, res) => {
+  try {
+    const { userId, videoId } = req.params;
+    const { name, url } = req.body;
+
+    const user = await User.findById(userId);
+
+    const video = user.videos.id(videoId);
+
+    if (!video) {
+      return res.status(404).json({ message: "Video not found" });
+    }
+
+    video.name = name;
+    video.url = url;
+
+    await user.save();
+
+    res.json({ message: "Video updated", user });
+
+  } catch (err) {
+    res.status(500).json({ message: "Error updating video" });
+  }
+});
+
+  app.post("/users/:userId/videos", async (req, res) => {
+  try {
+    const { name, url } = req.body;
+
+    const user = await User.findById(req.params.userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.videos = user.videos || [];
+
+    user.videos.push({
+      name,
+      url
+    });
+
+    await user.save();
+
+    res.json({ message: "Video added", user });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error adding video" });
+  }
+});
+
+app.get("/users/:userId/videos", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    res.json(user.videos || []);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching videos" });
+  }
+});
 
   // ======================================================
   // START SERVER

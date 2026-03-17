@@ -24,6 +24,7 @@
   IconButton,
   TablePagination
   } from "@mui/material";
+  import PlayCircleFilled from "@mui/icons-material/PlayCircleFilled";
 import { Tooltip } from "@mui/material";
   import EditIcon from "@mui/icons-material/Edit";
   import DeleteIcon from "@mui/icons-material/Delete";
@@ -60,7 +61,12 @@ import { Tooltip } from "@mui/material";
   const [uploadDialog,setUploadDialog] = useState(false);
   const [selectedUser,setSelectedUser] = useState(null);
   const [selectedFile,setSelectedFile] = useState(null);
-
+const [videoDialog, setVideoDialog] = useState(false);
+const [editingVideo, setEditingVideo] = useState(null);
+const [videoData, setVideoData] = useState({
+  name: "",
+  url: ""
+});
   const [userFormData,setUserFormData] = useState({
   username:"",
   email:"",
@@ -247,7 +253,18 @@ const formatDateTime = (date, time) => {
   setUserFormOpen(true);
 
   };
-
+const fetchUserVideos = async (userId) => {
+  try {
+    const res = await fetch(`${USER_API}/${userId}/videos`);
+    const data = await res.json();
+    setSelectedUser((prev) => ({
+      ...prev,
+      videos: data
+    }));
+  } catch (err) {
+    console.error(err);
+  }
+};
   // SAVE USER
 
   const handleUserSubmit = async ()=>{
@@ -336,6 +353,43 @@ const formatDateTime = (date, time) => {
   }
 
   };
+
+  const handleAddVideo = async () => {
+
+  if (!videoData.name || !videoData.url) return;
+
+  try {
+
+    const res = await fetch(`${USER_API}/${selectedUser._id}/videos`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(videoData)
+    });
+
+    if (!res.ok) throw new Error();
+
+    setUserSnackbar({
+      open: true,
+      message: "Video added successfully",
+      severity: "success"
+    });
+
+    setVideoDialog(false);
+    setVideoData({ name: "", url: "" });
+
+  } catch {
+
+    setUserSnackbar({
+      open: true,
+      message: "Error adding video",
+      severity: "error"
+    });
+
+  }
+
+};
 
   // DELETE DOCUMENT
 
@@ -814,7 +868,15 @@ borderLeft:"6px solid #009688"
   <IconButton onClick={()=>openUserForm(u)}>
   <EditIcon/>
   </IconButton>
-
+<IconButton
+  onClick={async () => {
+    setSelectedUser(u);
+    await fetchUserVideos(u._id);
+    setVideoDialog(true);
+  }}
+>
+  <PlayCircleFilled />
+</IconButton>
   <IconButton color="error" onClick={()=>handleDeleteUser(u._id)}>
   <DeleteIcon/>
   </IconButton>
@@ -959,7 +1021,118 @@ borderLeft:"6px solid #009688"
   </DialogActions>
 
   </Dialog>
+<Dialog open={videoDialog} onClose={() => setVideoDialog(false)} maxWidth="sm" fullWidth>
 
+  <DialogTitle>Manage Videos</DialogTitle>
+
+  <DialogContent>
+
+    {/* ADD / EDIT FORM */}
+    <TextField
+      fullWidth
+      label="Video Title"
+      margin="dense"
+      value={videoData.name}
+      onChange={(e) =>
+        setVideoData({ ...videoData, name: e.target.value })
+      }
+    />
+
+    <TextField
+      fullWidth
+      label="YouTube Link"
+      margin="dense"
+      value={videoData.url}
+      onChange={(e) =>
+        setVideoData({ ...videoData, url: e.target.value })
+      }
+    />
+
+    <Button
+      variant="contained"
+      sx={{ mt: 1 }}
+      onClick={async () => {
+
+        if (editingVideo) {
+          // UPDATE
+          await fetch(`${USER_API}/${selectedUser._id}/videos/${editingVideo._id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(videoData)
+          });
+        } else {
+          // ADD
+          await handleAddVideo();
+        }
+
+        setVideoData({ name: "", url: "" });
+        setEditingVideo(null);
+        fetchUserVideos(selectedUser._id);
+      }}
+    >
+      {editingVideo ? "Update Video" : "Add Video"}
+    </Button>
+
+    {/* VIDEO LIST */}
+    <Stack spacing={2} mt={3}>
+      {selectedUser?.videos?.map((v) => (
+        <Paper key={v._id} sx={{ p: 2 }}>
+
+          <Typography fontWeight="bold">{v.name}</Typography>
+
+          <Stack direction="row" spacing={1} mt={1}>
+
+            {/* EDIT */}
+            <Button
+              size="small"
+              onClick={() => {
+                setEditingVideo(v);
+                setVideoData({
+                  name: v.name,
+                  url: v.url
+                });
+              }}
+            >
+              Edit
+            </Button>
+
+            {/* DELETE */}
+            <Button
+              size="small"
+              color="error"
+              onClick={async () => {
+                await fetch(
+                  `${USER_API}/${selectedUser._id}/videos/${v._id}`,
+                  { method: "DELETE" }
+                );
+
+                fetchUserVideos(selectedUser._id);
+              }}
+            >
+              Delete
+            </Button>
+
+            {/* VIEW */}
+            <Button
+              size="small"
+              onClick={() => window.open(v.url, "_blank")}
+            >
+              View
+            </Button>
+
+          </Stack>
+
+        </Paper>
+      ))}
+    </Stack>
+
+  </DialogContent>
+
+  <DialogActions>
+    <Button onClick={() => setVideoDialog(false)}>Close</Button>
+  </DialogActions>
+
+</Dialog>
   {/* SNACKBARS */}
 
   <Snackbar open={bookingSnackbar.open} autoHideDuration={4000}
