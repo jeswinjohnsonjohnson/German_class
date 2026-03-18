@@ -875,8 +875,8 @@ const slotCount = bookedSlots.filter(
           <Button onClick={() => setOpenDialog(false)}>Close</Button>
 
 <Button onClick={sendBooking} disabled={!level || !time || bookingLoading}>
-              Book
-          </Button>
+  {bookingLoading ? "Booking..." : "Book"}
+</Button>
 
         </DialogActions>
 
