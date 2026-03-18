@@ -302,7 +302,8 @@ const availableTimes = useMemo(() => {
 
  const sendBooking = async () => {
   if (!level || !time || bookingLoading) return;
- setOpenDialog(false);
+
+  setOpenDialog(false);
   setBookingLoading(true);
 
   const booking = {
@@ -311,6 +312,12 @@ const availableTimes = useMemo(() => {
     date: selectedDate,
     time
   };
+
+  // ✅ SHOW SUCCESS IMMEDIATELY (optimistic)
+  showMessage(
+    `Booking saved for ${selectedDate} at ${time} (${level})`,
+    "#4caf50"
+  );
 
   try {
     const res = await fetch(API_URL, {
@@ -328,14 +335,8 @@ const availableTimes = useMemo(() => {
       return;
     }
 
+    // ✅ Update UI AFTER (background sync)
     await fetchBookings();
-
-    showMessage(
-      `Booking saved for ${selectedDate} at ${time} (${level})`,
-      "#4caf50"
-    );
-
-   
 
   } catch (err) {
     console.error(err);
