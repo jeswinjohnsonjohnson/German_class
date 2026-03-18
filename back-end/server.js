@@ -335,7 +335,12 @@
   const {email,level,date,time} = req.body;
 
   // 🔒 Prevent duplicate booking
-  const existingBooking = await Booking.findOne({ date, time, level });
+const existingBooking = await Booking.findOne({
+  email,
+  date,
+  time,
+  level
+});
 
   if(existingBooking){
   return res.status(400).json({ message: "This slot is already booked" });

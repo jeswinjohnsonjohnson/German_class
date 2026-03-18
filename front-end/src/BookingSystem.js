@@ -82,8 +82,8 @@ const [meetAnchor, setMeetAnchor] = useState(null);
   const timeSlots = [
     "07:00",
     "08:00",
-    "10:00",
     "09:00",
+    "10:00",
     "11:00",
     "12:00",
     "14:00",
@@ -223,29 +223,29 @@ useEffect(() => {
   }, [bookedSlots]);
 
 const availableTimes = useMemo(() => {
-
-  if (!selectedDate || !level) return [];
+  if (!selectedDate) return [];
 
   const now = new Date();
   const todayStr = now.toISOString().split("T")[0];
 
+  // ❌ block past dates
   if (selectedDate < todayStr) return [];
 
   return timeSlots.filter((t) => {
 
-    // check if slot already booked by another level
-    const bookedByOtherLevel = bookedSlots.some(
+    // ❌ 1. SAME USER cannot book same time again
+    const alreadyBookedByUser = bookedSlots.some(
       (b) =>
         b.date === selectedDate &&
         b.time === t &&
-        b.level !== level
+        b.email === userEmail
     );
 
-    if (bookedByOtherLevel) return false;
+    if (alreadyBookedByUser) return false;
 
-    // remove past time today
+
+    // ❌ 3. block past time (today only)
     if (selectedDate === todayStr) {
-
       const [hours, minutes] = t.split(":").map(Number);
 
       const slotTime = new Date(
@@ -259,12 +259,11 @@ const availableTimes = useMemo(() => {
       if (slotTime <= now) return false;
     }
 
+    // ✅ allowed
     return true;
-
   });
 
-}, [selectedDate, level, bookedSlots]);
-
+}, [selectedDate, bookedSlots, userEmail, level]);
   const handleDateClick = (info) => {
 
     const now = new Date();
@@ -301,8 +300,7 @@ const availableTimes = useMemo(() => {
 
   };
 
-  const sendBooking = async () => {
-
+ const sendBooking = async () => {
   if (!level || !time || bookingLoading) return;
 
   setBookingLoading(true);
@@ -314,33 +312,8 @@ const availableTimes = useMemo(() => {
     time
   };
 
-  setBookedSlots((prev) => [
-    ...prev,
-    { ...booking, _id: Math.random().toString() }
-  ]);
-
-  const tempId = Math.random().toString();
-
-  setCalendarEvents((prev) => [
-    ...prev,
-    {
-      id: tempId,
-      title: level,
-      start: `${selectedDate}T${time}:00`,
-      display: "block",
-      color: "#4caf50"
-    }
-  ]);
-
-  setSnackbarColor("#4caf50");
-  setSnackbarMessage(`Booking saved for ${selectedDate} at ${time} (${level})`);
-  setSnackbarOpen(true);
-
-  setOpenDialog(false);
-
   try {
-
-    await fetch(API_URL, {
+    const res = await fetch(API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -348,15 +321,28 @@ const availableTimes = useMemo(() => {
       body: JSON.stringify(booking)
     });
 
-    fetchBookings();
+    const data = await res.json();
+
+    if (!res.ok) {
+      showMessage(data.message || "Booking failed", "#ff4d4d");
+      return;
+    }
+
+    await fetchBookings();
+
+    showMessage(
+      `Booking saved for ${selectedDate} at ${time} (${level})`,
+      "#4caf50"
+    );
+
+    setOpenDialog(false);
 
   } catch (err) {
     console.error(err);
+    showMessage("Server error", "#ff4d4d");
   } finally {
-    // ✅ allow booking again
     setBookingLoading(false);
   }
-
 };
 
   const cancelBooking = async (id) => {
@@ -709,35 +695,35 @@ return (
         }}
       >
         {teacher.times.map((t) => {
-          const isBooked = bookedSlots.some(
-            (b) =>
-              b.date === selectedDate &&
-              b.time === t
-          );
+          const now = new Date();
+
+
+const slotCount = bookedSlots.filter(
+  (b) =>
+    b.date === selectedDate &&
+    b.time === t
+).length;
 
           return (
-            <Chip
-              key={t}
-              label={t}
-              size="small"
-              clickable={!isBooked}
-              onClick={() => {
-                if (!selectedDate) return;
+           <Chip
+  key={t}
+  label={`${t} (${slotCount})`}   // 👈 shows number of bookings
+  size="small"
+  clickable
+  onClick={() => {
+    if (!selectedDate) return;
 
-                if (!isBooked) {
-                  setLevel(teacher.level);
-                  setTime(t);
-                  setOpenDialog(true);
-                }
-              }}
-              sx={{
-                minWidth: 60,
-                justifyContent: "center",
-                fontWeight: 500
-              }}
-              color={isBooked ? "error" : "success"}
-              variant={isBooked ? "outlined" : "filled"}
-            />
+    setTime(t);
+    setOpenDialog(true);
+  }}
+  sx={{
+    minWidth: 70,
+    justifyContent: "center",
+    fontWeight: 500
+  }}
+  color="success"
+  variant="filled"
+/>
           );
         })}
       </Box>
