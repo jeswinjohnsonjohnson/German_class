@@ -302,7 +302,7 @@ const availableTimes = useMemo(() => {
 
  const sendBooking = async () => {
   if (!level || !time || bookingLoading) return;
-
+ setOpenDialog(false);
   setBookingLoading(true);
 
   const booking = {
@@ -335,7 +335,7 @@ const availableTimes = useMemo(() => {
       "#4caf50"
     );
 
-    setOpenDialog(false);
+   
 
   } catch (err) {
     console.error(err);
