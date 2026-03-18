@@ -126,9 +126,15 @@ const showMessage = (message, color = "#4caf50") => {
   }
 };
 useEffect(() => {
-  const today = new Date().toISOString().split("T")[0];
-  setSelectedDate(today);
-}, []);
+  if (bookedSlots.length > 0) {
+    // pick latest booking date
+    const latest = [...bookedSlots].sort(
+      (a, b) => new Date(b.date) - new Date(a.date)
+    )[0];
+
+    setSelectedDate(latest.date);
+  }
+}, [bookedSlots]);
 
 useEffect(() => {
   if (!currentUser) return;
@@ -541,28 +547,44 @@ return (
       </Button>
     ) : (
       <Tooltip
-        arrow
-        placement="top"
-        title={
-          <Box sx={{ fontSize: 13, lineHeight: 1.6 }}>
-            <strong>How to use the booking system</strong>
-            <br />
-            📅 Select a date from the calendar <br />
-            🎓 Choose your level and available time <br />
-            ⚠️ Maximum 3 bookings per week <br />
-            📄 Download learning materials anytime <br />
-            🎥 Join the class using the Meet button
-          </Box>
-        }
-      >
-        <Button
-          variant="outlined"
-          startIcon={<Info />}
-          sx={{ width: "100%", height: 42 }}
-        >
-          Info
-        </Button>
-      </Tooltip>
+  arrow
+  placement="top"
+  title={
+    <Box sx={{ fontSize: 13, lineHeight: 1.6, color: "#000" }}>
+      <strong>How to use the booking system</strong>
+      <br />
+      📅 Select a date from the calendar <br />
+      🎓 Choose your level and available time <br />
+      ⚠️ Maximum 3 bookings per week <br />
+      📄 Download learning materials anytime <br />
+      🎥 Join the class using the Meet button
+    </Box>
+  }
+  componentsProps={{
+    tooltip: {
+      sx: {
+        bgcolor: "#fff",   // ✅ white background
+        color: "#000",     // ✅ black text
+        boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+        borderRadius: 2,
+        p: 1.5
+      }
+    },
+    arrow: {
+      sx: {
+        color: "#fff" // ✅ arrow matches white background
+      }
+    }
+  }}
+>
+  <Button
+    variant="outlined"
+    startIcon={<Info />}
+    sx={{ width: "100%", height: 42 }}
+  >
+    Info
+  </Button>
+</Tooltip>
     )}
     {/* LOGOUT */}
     <Button
@@ -614,7 +636,7 @@ return (
     hour12: false
   }}
 
-  dayMaxEvents={isMobile ? 1 : true}
+ dayMaxEvents={isMobile ? 2 : 2}
 
   headerToolbar={
     isMobile
@@ -696,37 +718,86 @@ return (
         }}
       >
         {teacher.times.map((t) => {
-          const now = new Date();
+  if (!selectedDate) return null;
 
+const todayStr = new Date().toISOString().split("T")[0];
 
-const slotCount = bookedSlots.filter(
-  (b) =>
-    b.date === selectedDate &&
-    b.time === t
-).length;
+const bookingsAtSlot =
+  selectedDate === todayStr
+    ? bookedSlots.filter(
+        (b) =>
+          b.date === selectedDate &&
+          b.time === t
+      )
+    : [];
+  const slotCount = bookingsAtSlot.length;
 
-          return (
-           <Chip
+  const isBookedByUser = bookingsAtSlot.some(
+    (b) => b.email === userEmail
+  );
+
+  return (
+    <Chip
   key={t}
-  label={`${t} (${slotCount})`}   // 👈 shows number of bookings
+  label={
+    isBookedByUser
+      ? `${t} (You)`
+      : slotCount > 0
+      ? `${t} (${slotCount})`
+      : t
+  }
   size="small"
   clickable
-  onClick={() => {
-    if (!selectedDate) return;
+ onClick={() => {
+  if (!selectedDate) {
+    showMessage("Please select a date first", "#ff9800");
+    return;
+  }
 
-    setTime(t);
-    setOpenDialog(true);
-  }}
+  // ✅ SIMPLE WEEK CHECK
+  const { startStr, endStr } = getWeekStartEndStr(selectedDate);
+
+  const weeklyCount = bookedSlots.filter(
+    (b) =>
+      b.email === userEmail &&
+      b.date >= startStr &&
+      b.date <= endStr
+  ).length;
+
+  if (weeklyCount >= 3) {
+    showMessage("You cannot book more than 3 slots per week.", "#d4c85f");
+    return;
+  }
+
+  setTime(t);
+  setOpenDialog(true);
+}}
   sx={{
-    minWidth: 70,
+    minWidth: 85,
     justifyContent: "center",
-    fontWeight: 500
+    fontWeight: 600,
+
+    // 🎨 CUSTOM COLORS
+    bgcolor: isBookedByUser ? "#ffebee" : "#e8f5e9",
+    color: isBookedByUser ? "#c62828" : "#2e7d32",
+
+    border: isBookedByUser
+      ? "1px solid #ef5350"
+      : "1px solid #81c784",
+
+    // ✨ subtle glow for your slot
+    boxShadow: isBookedByUser
+      ? "0 0 8px rgba(198,40,40,0.3)"
+      : "none",
+
+    "&:hover": {
+      bgcolor: isBookedByUser ? "#ffcdd2" : "#c8e6c9"
+    }
   }}
-  color="success"
   variant="filled"
 />
-          );
-        })}
+  );
+})}
       </Box>
     </Box>
   ))}
